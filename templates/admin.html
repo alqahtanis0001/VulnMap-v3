@@ -169,6 +169,28 @@
   -->
 </div>
 
+<!-- Keep-Alive status pill -->
+{% set ka = keepalive_status or {} %}
+<div class="card" style="margin-top:12px;">
+  <h3>Keep-Alive</h3>
+  {% if ka.ok %}
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="display:inline-flex;align-items:center;gap:6px;padding:.35rem .6rem;border:1px solid #254a35;border-radius:999px;background:#1a2a20;color:#c9f2d4;">
+        <span style="width:8px;height:8px;border-radius:50%;background:#33d17a;"></span>
+        نشط — آخر نبضة: <strong style="margin-inline-start:6px;">{{ ka.ts or '—' }}</strong>
+      </span>
+    </div>
+    <p class="small muted" style="margin:.5rem 0 0;">يرسل طلباً إلى <code>{{ ka.url }}</code> كل 9 دقائق.</p>
+  {% else %}
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="display:inline-flex;align-items:center;gap:6px;padding:.35rem .6rem;border:1px solid #5b3e33;border-radius:999px;background:#2a2320;color:#f4d6c5;">
+        <span style="width:8px;height:8px;border-radius:50%;background:#f7a77a;"></span>
+        غير نشط — لم تُسجَّل أي نبضات بعد
+      </span>
+    </div>
+    <p class="small muted" style="margin:.5rem 0 0;">تحقق من سجلات الخادم أو متغيرات البيئة إذا لزم.</p>
+  {% endif %}
+</div>
 
 
 {% endblock %}
@@ -474,6 +496,7 @@
   if (window.VM && VM.progress) VM.progress.hide();
 })();
 </script>
+
 
 
 {% endblock %}

@@ -16,6 +16,7 @@ import json
 from pathlib import Path
 from typing import Optional, List
 from datetime import datetime, timezone, timedelta
+from scripts.keep_alive import start_keep_alive, read_keepalive_status
 
 from flask import (
     Flask, render_template, request, redirect, url_for, flash, abort, jsonify
@@ -549,6 +550,9 @@ def create_app() -> Flask:
             abort(403)
 
         stats = admin_stats_view()
+        # ✅ Add this line to read the latest keep-alive status JSON
+        ka_status = read_keepalive_status(DATA_DIR)
+
         return render_template(
             "admin.html",
             usernames=stats["usernames"],
@@ -557,6 +561,8 @@ def create_app() -> Flask:
             total_unresolved=stats["totals"]["unresolved"],
             total_discovered=stats["totals"]["discovered"],
             pending_withdrawals=pending_w,  # NEW
+            keepalive_status=ka_status,   # <-- ADD THIS
+
         )
 
     return app
@@ -564,6 +570,10 @@ def create_app() -> Flask:
 
 
 app = create_app()
+
+# 540 sec = 12 minutes. Change the default as you like.
+interval = int(os.getenv("KEEP_ALIVE_INTERVAL_SEC", "720"))
+start_keep_alive(DATA_DIR, interval_sec=interval)
 
 
 @app.post("/admin/run-weekly-cleanup")
