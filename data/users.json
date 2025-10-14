@@ -5,6 +5,17 @@
     "password_hash": "scrypt:32768:8:1$qBn264SiW1J0qhW6$1e06a94b14519b4e70515ca4f300c6fd08ccddc6e37a30099103267c3d29096f874b8a174d0ac0abe193487357aa8c384cbd7f726a1f9f92cb2f02855d76df8b",
     "is_admin": true,
     "created_at": "2025-10-07T19:11:31.222493+00:00"
+  },
+  {
+    "id": 2,
+    "username": "rayan",
+    "password_hash": "scrypt:32768:8:1$INIVTkDRkMw9vcD1$43341d75f38a5ecd5aa8b882fd3cf37170af3dab52c030d1756e48728f687e45fc2db3f27ec29223e062001155148faa26497ef0c185808607f62afbe72a66b6",
+    "is_admin": false,
+    "approved_id": "202504852",
+    "created_at": "2025-10-14T14:03:21.502272+00:00",
+    "first_name": "rayan",
+    "family_name": "alhelali",
+    "phone_number": "0548812425",
+    "phone_verified": false
   }
 ]
-
