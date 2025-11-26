@@ -3,15 +3,255 @@
 {% block head %}
   {{ super() }}
   <style>
+    .dashboard-page{
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+    .dashboard-hero{
+      display:flex;
+      flex-wrap:wrap;
+      gap:18px;
+      align-items:center;
+      justify-content:space-between;
+      padding:18px 20px;
+      background:linear-gradient(145deg, rgba(102,217,168,.08), rgba(78,124,255,.07)), var(--card);
+      border:1px solid #1e2b3f;
+    }
+    .dashboard-hero .hero-text{
+      flex:1;
+      min-width:260px;
+    }
+    .dashboard-hero h2{
+      margin:0 0 4px;
+    }
+    .hero-text p{
+      margin:0;
+      color:var(--muted);
+    }
+    .stat-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+    .stat-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:.35rem .75rem;
+      border-radius:999px;
+      border:1px solid #233354;
+      background:#172033;
+      color:#c3d3ff;
+      font-weight:600;
+      font-size:.9rem;
+    }
+    .stat-chip--assigned{
+      border-color:#2f354d;
+      background:#151b2b;
+      color:#dfe2ff;
+    }
+    .stat-chip--discovered{
+      border-color:#5a441f;
+      background:#2f2415;
+      color:#ffdca8;
+    }
+    .stat-chip--resolved{
+      border-color:#1f5037;
+      background:#12231b;
+      color:#bdf0d2;
+    }
+    .wallet-panel{
+      min-width:260px;
+      border-radius:16px;
+      padding:18px 20px;
+      background:linear-gradient(135deg, rgba(51,209,122,.18), rgba(78,124,255,.28));
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow:0 18px 40px rgba(0,0,0,.35);
+    }
+    .wallet-label{
+      font-size:.9rem;
+      color:rgba(255,255,255,.8);
+    }
+    .wallet-amount{
+      display:flex;
+      align-items:baseline;
+      gap:8px;
+      font-size:2rem;
+      font-weight:800;
+      letter-spacing:.3px;
+    }
+    .wallet-amount .currency{
+      font-size:.8em;
+      opacity:.85;
+    }
+    .wallet-sub{
+      margin-top:6px;
+      font-size:.95rem;
+      color:#e5f6ff;
+    }
+    .wallet-note{
+      margin-top:10px;
+      font-size:.9rem;
+      color:rgba(255,255,255,.82);
+    }
+    .dashboard-grid{
+      display:grid;
+      grid-template-columns:minmax(0, 2fr) minmax(260px, 1fr);
+      gap:16px;
+      align-items:flex-start;
+    }
+    .dashboard-main{
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+    .dashboard-side{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      position:sticky;
+      top:12px;
+    }
+    .ports-card h3{
+      margin:0;
+    }
+    .ports-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .ports-head p{
+      margin:4px 0 0;
+    }
+    .ports-toolbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+      justify-content:flex-end;
+    }
+    .port-filter-group{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+    }
+    .ports-search input{
+      width:180px;
+    }
+    .ports-table-wrap{
+      margin-top:12px;
+      overflow:auto;
+    }
+    #ports-table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0 8px;
+    }
+    #ports-table thead th{
+      background:#101522;
+      border-bottom:1px solid var(--border);
+    }
+    #ports-table tbody tr{
+      background:#111622;
+      box-shadow:0 2px 6px rgba(0,0,0,.35);
+    }
+    #ports-table tbody tr td{
+      border-top:none;
+      border-bottom:none;
+      padding:12px 10px;
+    }
+    .status-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      border-radius:999px;
+      padding:.2rem .6rem;
+      font-size:.85rem;
+      font-weight:600;
+    }
+    .status-chip span{
+      display:inline-block;
+      width:8px;
+      height:8px;
+      border-radius:50%;
+    }
+    .status-chip--discovered{
+      border:1px solid #5a441f;
+      background:#2f2415;
+      color:#ffdca8;
+    }
+    .status-chip--discovered span{background:#f5c84c;}
+    .status-chip--resolved{
+      border:1px solid #254a35;
+      background:#1a2a20;
+      color:#c9f2d4;
+    }
+    .status-chip--resolved span{background:#33d17a;}
+    .status-chip--archived{
+      border:1px solid #5b3e33;
+      background:#2a2320;
+      color:#f4d6c5;
+    }
+    .status-chip--archived span{background:#f7a77a;}
+    .row-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+    }
+    .mini-progress{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      font-size:.85rem;
+      color:var(--muted);
+    }
+    .mini-progress .mini-bar{
+      width:120px;
+      height:6px;
+      border-radius:999px;
+      background:#2a2a2a;
+      overflow:hidden;
+    }
+    .mini-progress .mini-fill{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg,#4e7cff,#6fffc3);
+      transition:width .2s ease;
+    }
+    .action-card h3{
+      margin-top:0;
+    }
+    .action-block + .action-block{
+      margin-top:14px;
+      padding-top:12px;
+      border-top:1px solid rgba(255,255,255,.05);
+    }
+    .action-block label{
+      display:block;
+      font-weight:700;
+      margin-bottom:6px;
+    }
+    .news-card h3{
+      margin:0 0 4px;
+    }
     .news-module{
-      margin-top:18px;
-      padding:14px 12px;
+      margin-top:10px;
+      padding:16px;
       border:1px dashed rgba(102,217,168,.35);
-      border-radius:12px;
-      background:rgba(102,217,168,.04);
+      border-radius:14px;
+      background:rgba(15,22,32,.8);
+    }
+    .news-module .btn{
+      width:100%;
+      margin-top:12px;
     }
     .news-status-pill{
-      padding:.25rem .65rem;
+      padding:.3rem .7rem;
       border-radius:999px;
       border:1px solid #233354;
       font-size:.85rem;
@@ -58,212 +298,221 @@
       font-size:.9rem;
       color:#9aa3ad;
     }
+    .health-stats{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .health-stat{
+      flex:1;
+      min-width:120px;
+    }
+    #user-health-canvas{
+      width:100%;
+      margin-top:10px;
+      border-radius:10px;
+      background:#0f141e;
+      border:1px solid rgba(255,255,255,.05);
+    }
     @keyframes newsShimmer{
       0%{background-position:0% 0;}
       100%{background-position:200% 0;}
+    }
+    @media (max-width:960px){
+      .dashboard-grid{
+        grid-template-columns:1fr;
+      }
+      .dashboard-side{
+        position:static;
+      }
+    }
+    @media (max-width:640px){
+      .ports-toolbar{
+        flex-direction:column;
+        align-items:stretch;
+      }
+      .ports-search input{
+        width:100%;
+      }
+      .wallet-panel{
+        width:100%;
+      }
     }
   </style>
 {% endblock %}
 
 {% block content %}
-<div class="card rtl" style="overflow:visible;">
-  <!-- Box 1: Main header -->
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-    <div>
-      <h2 id="hdr-counts" style="margin-bottom:4px;">
-        لوحة التحكم — المنافذ المكتشفة: {{ discovered_count }} | المحلولة: {{ resolved_count }}
-      </h2>
-      <p class="small" style="margin-top:0;">قم بفحص المنافذ ثم حل المكتشف منها لتحصل على المكافآت.</p>
+<div class="dashboard-page rtl">
+  <section class="card dashboard-hero">
+    <div class="hero-text">
+      <h2>لوحة التحكم</h2>
+      <p>تابع منافذك المكتشفة ({{ discovered_count }}) والمحلولة ({{ resolved_count }})، ثم اطلب السحب فور جهوز الرصيد.</p>
+      <div class="stat-row">
+        <span class="stat-chip stat-chip--assigned">📦 المسندة: <strong>{{ undiscovered_count }}</strong></span>
+        <span class="stat-chip stat-chip--discovered">🟡 المكتشفة: <strong>{{ discovered_count }}</strong></span>
+        <span class="stat-chip stat-chip--resolved">✅ المحلولة: <strong>{{ resolved_count }}</strong></span>
+      </div>
     </div>
-
-    <!-- Mini stats chips -->
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <span class="chip" style="padding:.35rem .6rem;border-radius:999px;background:#172033;color:#b7cdfa;border:1px solid #233354;">
-        🟡 مكتشفة: <strong style="margin-inline-start:6px;">{{ discovered_count }}</strong>
-      </span>
-      <span class="chip" style="padding:.35rem .6rem;border-radius:999px;background:#1a2a20;color:#c9f2d4;border:1px solid #254a35;">
-        ✅ محلولة: <strong style="margin-inline-start:6px;">{{ resolved_count }}</strong>
-      </span>
+    <div class="wallet-panel">
+      <div class="wallet-label">الرصيد الحالي</div>
+      <div class="wallet-amount">
+        <span id="available-balance"
+              data-balance="{{ '%.2f'|format(available_balance or 0) }}">
+          {{ '%.2f'|format(available_balance or 0) }}
+        </span>
+        <span class="currency">ر.س</span>
+      </div>
+      <div class="wallet-sub">
+        إجمالي الأرباح: <strong>{{ '%.2f'|format(total_earned or 0) }}</strong> ر.س
+      </div>
+      <div class="wallet-note">🔒 أموالك محفوظة بأمان حتى بعد عمليات التنظيف أو إعادة التشغيل.</div>
     </div>
-  </div>
+  </section>
 
-  <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;margin-top:12px;">
-
-    <!-- Box 2: Ports (left, main) -->
-    <div class="card" style="flex:2; min-width:560px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
-        <h3 style="margin:0;">المنافذ</h3>
-
-        <!-- Ports toolbar: filters + search -->
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <div class="btn-group" style="display:flex;gap:6px;">
-            <button type="button" class="btn tertiary small port-filter is-active" data-filter="all">الكل</button>
-            <button type="button" class="btn tertiary small port-filter" data-filter="discovered">المكتشفة</button>
-            <button type="button" class="btn tertiary small port-filter" data-filter="resolved">المحلولة</button>
-            <button type="button" class="btn tertiary small port-filter" data-filter="archived">المؤرشفة</button>
+  <div class="dashboard-grid">
+    <section class="dashboard-main">
+      <div class="card ports-card">
+        <div class="ports-head">
+          <div>
+            <h3>المنافذ</h3>
+            <p class="small muted">استخدم الفلاتر للتركيز على المنافذ المكتشفة أو المؤرشفة.</p>
           </div>
-          <div class="search" style="display:flex;align-items:center;gap:6px;">
-            <input id="port-search" type="text" class="input" placeholder="ابحث برقم المنفذ…" style="width:180px;">
+          <div class="ports-toolbar">
+            <div class="btn-group port-filter-group">
+              <button type="button" class="btn tertiary small port-filter is-active" data-filter="all">الكل</button>
+              <button type="button" class="btn tertiary small port-filter" data-filter="discovered">المكتشفة</button>
+              <button type="button" class="btn tertiary small port-filter" data-filter="resolved">المحلولة</button>
+              <button type="button" class="btn tertiary small port-filter" data-filter="archived">المؤرشفة</button>
+            </div>
+            <div class="ports-search">
+              <input id="port-search" type="text" class="input" placeholder="ابحث برقم المنفذ…">
+            </div>
           </div>
+        </div>
+
+        <div class="ports-table-wrap">
+          <table class="table" id="ports-table">
+            <thead>
+              <tr>
+                <th>المنفذ</th>
+                <th>الوصف</th>
+                <th>المكافأة</th>
+                <th>الحالة</th>
+                <th style="min-width:260px;">الإجراء</th>
+              </tr>
+            </thead>
+            <tbody id="ports-body">
+              {% set any_rows = (discovered|length + resolved|length + archived|length) > 0 %}
+              {% if not any_rows %}
+                <tr><td colspan="5" class="small muted" style="text-align:center;">لا توجد منافذ ظاهرة حالياً — اضغط «فحص المنافذ».</td></tr>
+              {% else %}
+                {# --- Discovered --- #}
+                {% for p in discovered %}
+                  {% if p.id and p.id[:7] == 'ledger-' %}
+                    {# skip synthetic ledger entries #}
+                  {% else %}
+                    <tr data-row-id="{{ p.id }}" data-status="discovered">
+                      <td class="td-port"><strong>{{ p.port_number }}</strong></td>
+                      <td>—</td>
+                      <td class="td-reward">{{ '%.2f'|format(p.reward or 0) }}</td>
+                      <td class="td-status">
+                        <span class="status-chip status-chip--discovered">
+                          <span></span> مكتشف
+                        </span>
+                      </td>
+                      <td>
+                        <div class="row-actions">
+                          <form class="resolve-form">
+                            <input type="hidden" name="port_id" value="{{ p.id }}">
+                            <button class="btn resolve-btn" type="button"
+                                    data-port-id="{{ p.id }}"
+                                    data-ready-at="{{ p.ready_at or '' }}"
+                                    data-delay-sec="{{ p.resolve_delay_sec or 0 }}"
+                                    data-disc="{{ p.discovered_at or '' }}">
+                              حل
+                            </button>
+                          </form>
+                          <form class="archive-form">
+                            <input type="hidden" name="port_id" value="{{ p.id }}">
+                            <button class="btn tertiary" type="button">أرشفة</button>
+                          </form>
+                          <div class="mini-progress" hidden>
+                            <div class="mini-bar">
+                              <div class="mini-fill"></div>
+                            </div>
+                            <span class="mini-txt small muted">⏳ …</span>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  {% endif %}
+                {% endfor %}
+
+                {# --- Resolved --- #}
+                {% for p in resolved %}
+                  {% if p.id and p.id[:7] == 'ledger-' %}
+                    {# skip synthetic ledger entries #}
+                  {% else %}
+                    <tr data-row-id="{{ p.id }}" data-status="resolved">
+                      <td class="td-port"><strong>{{ p.port_number }}</strong></td>
+                      <td>—</td>
+                      <td class="td-reward">{{ '%.2f'|format(p.reward or 0) }}</td>
+                      <td class="td-status">
+                        <span class="status-chip status-chip--resolved">
+                          <span></span> تم الحل
+                        </span>
+                      </td>
+                      <td><span class="small muted">—</span></td>
+                    </tr>
+                  {% endif %}
+                {% endfor %}
+
+                {# --- Archived --- #}
+                {% for p in archived %}
+                  {% if p.id and p.id[:7] == 'ledger-' %}
+                    {# skip synthetic ledger entries #}
+                  {% else %}
+                    <tr data-row-id="{{ p.id }}" data-status="archived">
+                      <td class="td-port"><strong>{{ p.port_number }}</strong></td>
+                      <td>—</td>
+                      <td class="td-reward">{{ '%.2f'|format(p.reward or 0) }}</td>
+                      <td class="td-status">
+                        <span class="status-chip status-chip--archived">
+                          <span></span> مؤرشف
+                        </span>
+                      </td>
+                      <td>
+                        <form class="unarchive-form" method="post" action="{{ url_for('user_unarchive') }}">
+                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                          <input type="hidden" name="port_id" value="{{ p.id }}">
+                          <button class="btn tertiary small" type="button">استعادة</button>
+                          <noscript>
+                            <button class="btn tertiary small" type="submit">استعادة (بدون JS)</button>
+                          </noscript>
+                        </form>
+                      </td>
+                    </tr>
+                  {% endif %}
+                {% endfor %}
+              {% endif %}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <div style="margin-top:8px;">
-        <table class="table" id="ports-table" style="width:100%;border-collapse:separate;border-spacing:0 6px;">
-          <thead>
-            <tr>
-              <th>المنفذ</th>
-              <th>الوصف</th>
-              <th>المكافأة</th>
-              <th>الحالة</th>
-              <th style="min-width:260px;">الإجراء</th>
-            </tr>
-          </thead>
-          <tbody id="ports-body">
-            {% set any_rows = (discovered|length + resolved|length + archived|length) > 0 %}
-            {% if not any_rows %}
-              <tr><td colspan="5" style="text-align:center;color:#999;">لا توجد منافذ ظاهرة حالياً — اضغط "فحص المنافذ".</td></tr>
-            {% else %}
-              {# --- Discovered --- #}
-              {% for p in discovered %}
-                {% if p.id and p.id[:7] == 'ledger-' %}
-                  {# skip synthetic ledger entries #}
-                {% else %}
-                  <tr data-row-id="{{ p.id }}" data-status="discovered">
-                    <td class="td-port"><strong>{{ p.port_number }}</strong></td>
-                    <td>—</td>
-                    <td class="td-reward">{{ '%.2f'|format(p.reward or 0) }}</td>
-                    <td class="td-status">
-                      <span style="padding:.2rem .5rem;border-radius:999px;background:#172033;color:#b7cdfa;border:1px solid #233354;display:inline-flex;align-items:center;gap:6px;">
-                        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f5c84c;"></span> مكتشف
-                      </span>
-                    </td>
-                    <td>
-                      <div class="row-actions" style="display:flex;gap:8px;align-items:center;">
-                        <form class="resolve-form">
-                          <input type="hidden" name="port_id" value="{{ p.id }}">
-                          <button class="btn resolve-btn" type="button"
-                                  data-port-id="{{ p.id }}"
-                                  data-ready-at="{{ p.ready_at or '' }}"
-                                  data-delay-sec="{{ p.resolve_delay_sec or 0 }}"
-                                  data-disc="{{ p.discovered_at or '' }}">
-                            حل
-                          </button>
-                        </form>
-                        <form class="archive-form">
-                          <input type="hidden" name="port_id" value="{{ p.id }}">
-                          <button class="btn tertiary" type="button">أرشفة</button>
-                        </form>
-                        <div class="mini-progress" hidden>
-                          <div class="mini-bar" style="width:120px;height:6px;background:#2a2a2a;border-radius:999px;overflow:hidden;">
-                            <div class="mini-fill" style="height:100%;width:0%"></div>
-                          </div>
-                          <span class="mini-txt small muted" style="margin-inline-start:6px;">⏳ …</span>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                {% endif %}
-              {% endfor %}
-
-              {# --- Resolved --- #}
-              {% for p in resolved %}
-                {% if p.id and p.id[:7] == 'ledger-' %}
-                  {# skip synthetic ledger entries #}
-                {% else %}
-                  <tr data-row-id="{{ p.id }}" data-status="resolved">
-                    <td class="td-port"><strong>{{ p.port_number }}</strong></td>
-                    <td>—</td>
-                    <td class="td-reward">{{ '%.2f'|format(p.reward or 0) }}</td>
-                    <td class="td-status">
-                      <span style="padding:.2rem .5rem;border-radius:999px;background:#1a2a20;color:#c9f2d4;border:1px solid #254a35;display:inline-flex;align-items:center;gap:6px;">
-                        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#33d17a;"></span> تم الحل
-                      </span>
-                    </td>
-                    <td><span class="small muted">—</span></td>
-                  </tr>
-                {% endif %}
-              {% endfor %}
-
-              {# --- Archived --- #}
-              {% for p in archived %}
-                {% if p.id and p.id[:7] == 'ledger-' %}
-                  {# skip synthetic ledger entries #}
-                {% else %}
-                  <tr data-row-id="{{ p.id }}" data-status="archived">
-                    <td class="td-port"><strong>{{ p.port_number }}</strong></td>
-                    <td>—</td>
-                    <td class="td-reward">{{ '%.2f'|format(p.reward or 0) }}</td>
-                    <td class="td-status">
-                      <span style="padding:.2rem .5rem;border-radius:999px;background:#2a2320;color:#f4d6c5;border:1px solid #5b3e33;display:inline-flex;align-items:center;gap:6px;">
-                        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f7a77a;"></span> مؤرشف
-                      </span>
-                    </td>
-                    <td>
-                      <form class="unarchive-form" method="post" action="{{ url_for('user_unarchive') }}" style="display:inline-flex;gap:6px;align-items:center;">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="port_id" value="{{ p.id }}">
-                        <button class="btn tertiary small" type="button">استعادة</button>
-                        <noscript>
-                          <button class="btn tertiary small" type="submit">استعادة (بدون JS)</button>
-                        </noscript>
-                      </form>
-                    </td>
-                  </tr>
-                {% endif %}
-              {% endfor %}
-            {% endif %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Sidebar (right) : Box 4 (Actions) above Box 3 (Wallet) -->
-    <div style="flex:1; min-width:300px; display:flex; flex-direction:column; gap:12px; position:sticky; top:10px;">
-
-      <!-- Box 4: Actions -->
-      <div class="card">
-        <h3 style="margin-top:0;">الإجراءات</h3>
-
-        <!-- Scan (handled by scan_animation.js) -->
-        <form id="scan-form" style="margin-top:6px;">
-          <button id="scan-btn" class="btn" type="button" style="width:100%;font-size:1.05em;padding:.8rem 1rem;">
-            🔍 فحص المنافذ
-          </button>
-        </form>
-
-        <!-- Withdraw (real HTML POST) -->
-        <form method="post" action="{{ url_for('user_withdraw_request') }}" style="margin-top:10px;display:flex;gap:8px;align-items:center;">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <input type="number" name="amount_sar" step="0.01" min="0" placeholder="المبلغ (ر.س)" class="input" style="flex:1;min-width:120px;" required>
-          <button class="btn secondary" type="submit">طلب سحب</button>
-        </form>
-
-        <p class="small muted" style="margin-top:8px;">
-          تلميح: يمكنك السحب فور وصول الرصيد.
-        </p>
-
-        <form method="post" action="{{ url_for('user_clear_resolved') }}" style="margin-top:12px;">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button class="btn danger small" type="submit"
-                  onclick="return confirm('سيتم حذف جميع المنافذ المحلولة من القائمة مع الاحتفاظ بالأرباح. المتابعة؟');">
-            🧽 حذف المنافذ المحلولة
-          </button>
-        </form>
-
+      <div class="card news-card">
+        <h3>أخبار الضربات (ذكاء اصطناعي بعيد)</h3>
+        <p class="small muted">يشغّل النظام عقدة ذكاء اصطناعي تبحث عن الضربات القادمة، ثم تربط النتائج بقاعدة بيانات VulnMap.</p>
         <div id="news-search-module" class="news-module">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
-            <div>
-              <div style="font-weight:700;">أخبار الضربات (ذكاء اصطناعي بعيد)</div>
-              <div class="small muted" style="margin-top:2px;">يُشغّل نظام تحكم ذكي يبحث عبر الإنترنت ثم يعبر قاعدة بيانات VulnMap عن الضربات المقبلة.</div>
-            </div>
+            <div style="font-weight:700;">مراقبة الاهتزازات العالمية</div>
             <span class="news-status-pill" data-role="news-status-pill" data-state="idle">هادئ</span>
           </div>
-          <button class="btn" type="button" data-role="news-button" style="width:100%;margin-top:12px;">
+          <button class="btn" type="button" data-role="news-button">
             تشغيل البحث الذكي
           </button>
           <div class="news-progress-shell" data-role="news-progress-wrap" hidden>
-            <div class="news-progress-fill" data-role="news-progress-fill" style="width:0%;"></div>
+            <div class="news-progress-fill" data-role="news-progress-fill"></div>
           </div>
           <div class="small muted" style="margin-top:6px;" data-role="news-timer"></div>
           <div class="news-result" data-role="news-result" hidden>
@@ -276,55 +525,62 @@
           </div>
         </div>
       </div>
+    </section>
 
-      <!-- Box 3: Wallet (only الرصيد الحالي) -->
-      <div class="card" style="overflow:hidden;">
-        <h3 style="margin-top:0;">المحفظة</h3>
+    <aside class="dashboard-side">
+      <div class="card action-card">
+        <h3>الإجراءات السريعة</h3>
 
-        <!-- Decorative gradient band -->
-        <div aria-hidden="true" style="height:6px;border-radius:8px;background:linear-gradient(90deg,#4e7cff,#59d7ff,#6fffc3);opacity:.4;margin:-4px 0 8px;"></div>
-
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-          <div>
-            <div class="small muted" style="margin-bottom:2px;">الرصيد الحالي</div>
-            <div style="font-size:1.6em;font-weight:800;letter-spacing:.3px;">
-              <span id="available-balance"
-                    data-balance="{{ '%.2f'|format(available_balance or 0) }}">
-                {{ '%.2f'|format(available_balance or 0) }}
-              </span>
-              <span class="small" style="opacity:.85;margin-inline-start:6px;">ر.س</span>
-            </div>
-          </div>
-          <!-- Lock icon hinting persistence across cleanup -->
-          <div title="يستمر الرصيد بعد التنظيف الأسبوعي" style="opacity:.75;font-size:1.3em;">🔒</div>
+        <div class="action-block">
+          <label>فحص المنافذ</label>
+          <form id="scan-form">
+            <button id="scan-btn" class="btn" type="button">
+              🔍 فحص المنافذ
+            </button>
+          </form>
         </div>
 
-        <p class="small muted" style="margin-top:8px;">
-          أموالك محفوظة بأمان في مكان خاص و آمن داخل الموقع.
-        </p>
+        <div class="action-block">
+          <label>طلب سحب</label>
+          <form method="post" action="{{ url_for('user_withdraw_request') }}" style="display:flex;gap:8px;align-items:center;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="number" name="amount_sar" step="0.01" min="0" placeholder="المبلغ (ر.س)" class="input" style="flex:1;min-width:120px;" required>
+            <button class="btn secondary" type="submit">إرسال</button>
+          </form>
+          <p class="small muted" style="margin-top:6px;">يمكنك السحب فور توفر الرصيد.</p>
+        </div>
+
+        <div class="action-block">
+          <label>تنظيم المنافذ المحلولة</label>
+          <form method="post" action="{{ url_for('user_clear_resolved') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn danger small" type="submit"
+                    onclick="return confirm('سيتم حذف جميع المنافذ المحلولة من القائمة مع الاحتفاظ بالأرباح. المتابعة؟');">
+              🧽 حذف المنافذ المحلولة
+            </button>
+          </form>
+        </div>
       </div>
 
-      <div class="card" id="health-card">
-        <h3 style="margin-top:0;">حالة الخادم (CPU / RAM)</h3>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:120px;">
+      <div class="card health-card" id="health-card">
+        <h3>حالة الخادم (CPU / RAM)</h3>
+        <div class="health-stats">
+          <div class="health-stat">
             <div class="small muted">المعالج</div>
             <div style="font-size:1.4em;font-weight:700;"><span data-health-cpu>--%</span></div>
           </div>
-          <div style="flex:1;min-width:120px;">
+          <div class="health-stat">
             <div class="small muted">الذاكرة</div>
             <div style="font-size:1.4em;font-weight:700;"><span data-health-ram>--%</span></div>
           </div>
         </div>
-        <canvas id="user-health-canvas" height="140" style="width:100%;margin-top:10px;border-radius:10px;background:#0f141e;border:1px solid rgba(255,255,255,.05);"></canvas>
+        <canvas id="user-health-canvas" height="140"></canvas>
         <div class="small muted" style="margin-top:6px;">
           آخر تحديث: <span data-health-updated>—</span>
           <span data-health-status class="chip" style="margin-inline-start:8px;display:none;">وضع مبسط</span>
         </div>
       </div>
-
-    </div>
-
+    </aside>
   </div>
 </div>
 
