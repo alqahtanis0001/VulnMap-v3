@@ -6,7 +6,6 @@
 # - Business logic in port_logic.py
 
 from __future__ import annotations
-# add near other flask imports at the top if missing
 from flask import current_app
 import time
 import os
@@ -17,6 +16,8 @@ from pathlib import Path
 from typing import Optional, List
 from datetime import datetime, timezone, timedelta
 from scripts.keep_alive import start_keep_alive, read_keepalive_status
+from withdrawals_path import get_withdrawals_file
+from rayan_wallet import is_rayan, reset_rayan_wallet
 
 from flask import (
     Flask, render_template, request, redirect, url_for, flash, abort, jsonify
@@ -50,7 +51,7 @@ LOGIN_LOG_DIR = DATA_DIR / "login_activity"
 
 USERS_FILE = DATA_DIR / "users.json"
 APPROVED_IDS_FILE = DATA_DIR / "approved_ids.json"
-WITHDRAWALS_FILE = DATA_DIR / "withdrawals.json"
+WITHDRAWALS_FILE = get_withdrawals_file(DATA_DIR)
 PROCESSED_FILE = DATA_DIR / "ports" / "processed_requests.json"  # created by port_logic if missing
 
 
@@ -609,6 +610,10 @@ def admin_reset_balance(username):
         # 3) Recreate a ledger port with reward == approved_sum => available becomes 0
         _write_ledger_port(uname, approved_sum)
 
+        # 4) Persist Rayan's wallet snapshot so it stays zeroed across restarts
+        if is_rayan(uname):
+            reset_rayan_wallet(DATA_DIR, total_earned=approved_sum)
+
         flash(f"تم تصفير الرصيد الحالي للمستخدم {uname}. (حُذف {deleted} ملف منافذ لهذا المستخدم)", "ok")
     except Exception as e:
         flash(f"فشل التصفير: {e}", "err")
@@ -709,21 +714,6 @@ def user_withdraw_request():
 
     flash("تم إرسال طلب السحب.", "ok")
     return redirect(url_for("user_dashboard"))
-
-
-# ---- withdrawals file resolver (handles old typo "withdrawls.json") ----
-def _get_withdrawals_file() -> Path:
-    """
-    Prefer data/withdrawals.json; if only 'withdrawls.json' exists, use it.
-    If neither exists, create the correct one on first write.
-    """
-    correct = DATA_DIR / "withdrawals.json"
-    typo    = DATA_DIR / "withdrawls.json"
-    if correct.exists():
-        return correct
-    if typo.exists() and not correct.exists():
-        return typo
-    return correct
 
 
 # ------------------------------ JSON endpoints (AJAX; NO RELOAD) ------------------------------

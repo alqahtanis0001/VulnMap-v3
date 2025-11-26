@@ -6,7 +6,6 @@
 # - Read helpers for dashboards and admin stats
 
 from __future__ import annotations
-# at the top with other imports
 import time
 
 import json
@@ -16,6 +15,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional
+from withdrawals_path import get_withdrawals_file
+from rayan_wallet import is_rayan, load_rayan_wallet
 
 # ---------- Paths ----------
 ROOT = Path(__file__).resolve().parent
@@ -23,7 +24,7 @@ DATA_DIR = ROOT / "data"
 PORTS_DIR = DATA_DIR / "ports" / "generated_ports"
 LOCKS_DIR = DATA_DIR / "ports" / "locks"
 PROCESSED_FILE = DATA_DIR / "ports" / "processed_requests.json"
-WITHDRAWALS_FILE = DATA_DIR / "withdrawals.json"
+WITHDRAWALS_FILE = get_withdrawals_file(DATA_DIR)
 USERS_FILE = DATA_DIR / "users.json"
 
 # ---------- Utilities ----------
@@ -46,7 +47,6 @@ def _read_json(path: Path, default):
     except Exception:
         return default
 
-# REPLACE the whole _write_json_atomic with this:
 def _write_json_atomic(path: Path, data) -> None:
     """
     Windows-safe atomic write with retries.
@@ -419,6 +419,14 @@ def user_dashboard_view(username: str) -> Dict:
                     pass
     available = round(max(0.0, total_earned - approved_sum), 2)
 
+    wallet = {
+        "total_earned": total_earned,
+        "available_balance": available,
+    }
+
+    if is_rayan(username):
+        wallet = load_rayan_wallet(DATA_DIR, wallet)
+
     return {
         "assigned": assigned,
         "discovered": discovered,
@@ -430,10 +438,7 @@ def user_dashboard_view(username: str) -> Dict:
             "resolved": len(resolved),
             "archived": len(archived),
         },
-        "wallet": {
-            "total_earned": total_earned,
-            "available_balance": available,
-        }
+        "wallet": wallet,
     }
 
 def admin_stats_view() -> Dict:
