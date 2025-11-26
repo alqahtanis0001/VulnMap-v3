@@ -26,6 +26,7 @@ LOCKS_DIR = DATA_DIR / "ports" / "locks"
 PROCESSED_FILE = DATA_DIR / "ports" / "processed_requests.json"
 WITHDRAWALS_FILE = get_withdrawals_file(DATA_DIR)
 USERS_FILE = DATA_DIR / "users.json"
+WALLET_SNAPSHOT_FILE = DATA_DIR / "wallet_snapshots.json"
 
 # ---------- Utilities ----------
 
@@ -83,6 +84,39 @@ def _write_json_atomic(path: Path, data) -> None:
     if not tmp.exists():
         write_tmp()
     os.replace(tmp, path)
+
+
+def _sanitize_wallet_dict(wallet: Dict[str, float]) -> Dict[str, float]:
+    return {
+        "available_balance": round(float(wallet.get("available_balance", 0.0)), 2),
+        "total_earned": round(float(wallet.get("total_earned", 0.0)), 2),
+    }
+
+def _read_wallet_snapshots() -> Dict[str, Dict[str, float]]:
+    data = _read_json(WALLET_SNAPSHOT_FILE, {})
+    return data if isinstance(data, dict) else {}
+
+def _persist_wallet_snapshot(username: str, wallet: Dict[str, float]) -> Dict[str, float]:
+    uname = (username or "").strip().lower()
+    if not uname:
+        return _sanitize_wallet_dict(wallet)
+    sanitized = _sanitize_wallet_dict(wallet)
+    snapshots = _read_wallet_snapshots()
+    existing = snapshots.get(uname)
+    if existing != sanitized:
+        snapshots[uname] = sanitized
+        _write_json_atomic(WALLET_SNAPSHOT_FILE, snapshots)
+    return sanitized
+
+def get_wallet_snapshot(username: str) -> Optional[Dict[str, float]]:
+    uname = (username or "").strip().lower()
+    if not uname:
+        return None
+    snapshots = _read_wallet_snapshots()
+    val = snapshots.get(uname)
+    if isinstance(val, dict):
+        return _sanitize_wallet_dict(val)
+    return None
 
 
 # ---------- Data structures ----------
@@ -451,6 +485,8 @@ def user_dashboard_view(username: str) -> Dict:
 
     if is_rayan(username):
         wallet = load_rayan_wallet(DATA_DIR, wallet)
+
+    wallet = _persist_wallet_snapshot(username, wallet)
 
     return {
         "assigned": assigned,

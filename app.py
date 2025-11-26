@@ -1175,6 +1175,13 @@ def user_unarchive_json():
     }), status_code
 
 
+@app.route("/wallet.json", methods=["GET"])
+@login_required
+def wallet_snapshot_json():
+    vm = user_dashboard_view(current_user.username)
+    return jsonify({"ok": True, "wallet": vm["wallet"]})
+
+
 # ------------------------------ Admin auxiliary pages ------------------------------
 @app.route("/admin/payouts", methods=["GET"], endpoint="payouts_list")
 @login_required

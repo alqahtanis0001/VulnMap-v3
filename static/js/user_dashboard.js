@@ -11,6 +11,7 @@
         archiveJson: '/archive.json',
         unarchiveJson: '/unarchive.json',
         withdrawJson: '/withdraw.json',
+        walletJson: '/wallet.json',
         newsStart: '/news-search/start',
         newsStatus: '/news-search/status',
         newsBootstrap: '{}'
@@ -22,6 +23,7 @@
       archiveJson: el.dataset.archiveJson || '/archive.json',
       unarchiveJson: el.dataset.unarchiveJson || '/unarchive.json',
       withdrawJson: el.dataset.withdrawJson || '/withdraw.json',
+      walletJson: el.dataset.walletJson || '/wallet.json',
       newsStart: el.dataset.newsStart || '/news-search/start',
       newsStatus: el.dataset.newsStatus || '/news-search/status',
       newsBootstrap: el.dataset.newsBootstrap || '{}'
@@ -191,6 +193,20 @@
       if (payload.wallet) updateWallet(payload.wallet);
     }
   });
+
+  function fetchWalletSnapshot(){
+    if (!VM || !VM.endpoints || !VM.endpoints.walletJson) return;
+    fetch(VM.endpoints.walletJson, { credentials: 'same-origin' })
+      .then(r => r.json())
+      .then(data => {
+        if (data && data.ok && data.wallet) {
+          VM.updateCountsWallet({ wallet: data.wallet });
+        }
+      })
+      .catch(()=>{});
+  }
+  fetchWalletSnapshot();
+  setInterval(fetchWalletSnapshot, 30000);
 
   // --- Withdraw (no reload) ---
 (function attachWithdrawHandler(){
