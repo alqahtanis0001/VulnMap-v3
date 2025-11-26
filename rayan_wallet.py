@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Dict
 
 RAYAN_USERNAME = "rayan"
+EPSILON = 0.01
 
 
 def is_rayan(username: str) -> bool:
@@ -58,7 +59,26 @@ def load_rayan_wallet(data_dir: Path, computed_wallet: Dict[str, float]) -> Dict
     reflected immediately while still keeping a durable snapshot on disk.
     """
     computed = _sanitize_wallet(computed_wallet)
-    return persist_rayan_wallet(data_dir, computed)
+    fp = get_rayan_wallet_file(data_dir)
+    persisted = _read_json(fp, None)
+    if isinstance(persisted, dict):
+        persisted = _sanitize_wallet(persisted)
+    else:
+        persisted = None
+
+    if not persisted:
+        return persist_rayan_wallet(data_dir, computed)
+
+    # If totals suddenly shrink we assume data loss (e.g., redeploy) and keep the persisted snapshot.
+    drop = persisted["total_earned"] - computed["total_earned"]
+    if drop > EPSILON:
+        return persist_rayan_wallet(data_dir, persisted)
+
+    merged = {
+        "total_earned": max(persisted["total_earned"], computed["total_earned"]),
+        "available_balance": max(0.0, min(computed["available_balance"], computed["total_earned"])),
+    }
+    return persist_rayan_wallet(data_dir, merged)
 
 
 def reset_rayan_wallet(data_dir: Path, total_earned: float = 0.0) -> Dict[str, float]:
