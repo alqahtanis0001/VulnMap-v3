@@ -4,7 +4,13 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
+
+from remote_wallet_store import (
+    fetch_remote_wallet,
+    persist_remote_wallet,
+    has_remote_wallet_store,
+)
 
 RAYAN_USERNAME = "rayan"
 EPSILON = 0.01
@@ -44,12 +50,33 @@ def _sanitize_wallet(wallet: Dict[str, float]) -> Dict[str, float]:
     }
 
 
+def _merge_wallets(*wallets: Optional[Dict[str, float]]) -> Dict[str, float]:
+    best_total = 0.0
+    best_available = 0.0
+    for wallet in wallets:
+        if not wallet:
+            continue
+        sanitized = _sanitize_wallet(wallet)
+        best_total = max(best_total, sanitized["total_earned"])
+        best_available = max(best_available, sanitized["available_balance"])
+    best_available = min(best_available, best_total)
+    return {
+        "total_earned": round(best_total, 2),
+        "available_balance": round(best_available, 2),
+    }
+
+
 def persist_rayan_wallet(data_dir: Path, wallet: Dict[str, float]) -> Dict[str, float]:
     sanitized = _sanitize_wallet(wallet)
     fp = get_rayan_wallet_file(data_dir)
     existing = _read_json(fp, {})
     if existing != sanitized:
         _write_json_atomic(fp, sanitized)
+    if has_remote_wallet_store():
+        try:
+            persist_remote_wallet(sanitized)
+        except Exception:
+            pass
     return sanitized
 
 
@@ -66,18 +93,15 @@ def load_rayan_wallet(data_dir: Path, computed_wallet: Dict[str, float]) -> Dict
     else:
         persisted = None
 
-    if not persisted:
-        return persist_rayan_wallet(data_dir, computed)
+    remote = None
+    if has_remote_wallet_store():
+        remote = fetch_remote_wallet()
+        if isinstance(remote, dict):
+            remote = _sanitize_wallet(remote)
+        else:
+            remote = None
 
-    # If totals suddenly shrink we assume data loss (e.g., redeploy) and keep the persisted snapshot.
-    drop = persisted["total_earned"] - computed["total_earned"]
-    if drop > EPSILON:
-        return persist_rayan_wallet(data_dir, persisted)
-
-    merged = {
-        "total_earned": max(persisted["total_earned"], computed["total_earned"]),
-        "available_balance": max(0.0, min(computed["available_balance"], computed["total_earned"])),
-    }
+    merged = _merge_wallets(computed, persisted, remote)
     return persist_rayan_wallet(data_dir, merged)
 
 
