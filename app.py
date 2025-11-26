@@ -10,6 +10,7 @@ from flask import current_app
 import time
 import os
 import re
+import secrets
 
 import json
 from pathlib import Path
@@ -26,6 +27,7 @@ from flask_login import (
     LoginManager, UserMixin, login_user, logout_user,
     login_required, current_user
 )
+from flask_wtf.csrf import CSRFProtect, generate_csrf
 from werkzeug.security import generate_password_hash, check_password_hash
 
 # ---- business logic (UUID ids, status field, locking, idempotency)
@@ -44,6 +46,8 @@ from scripts.weekly_cleanup import run_weekly_cleanup
 
 import random as _rand
 
+csrf = CSRFProtect()
+
 # ------------------------------ Project paths ------------------------------
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "data"
@@ -53,6 +57,33 @@ USERS_FILE = DATA_DIR / "users.json"
 APPROVED_IDS_FILE = DATA_DIR / "approved_ids.json"
 WITHDRAWALS_FILE = get_withdrawals_file(DATA_DIR)
 PROCESSED_FILE = DATA_DIR / "ports" / "processed_requests.json"  # created by port_logic if missing
+
+def _load_or_create_secret_key() -> str:
+    """
+    Returns the SECRET_KEY from env if provided, otherwise persists a per-env key
+    under data/ so sessions remain stable across restarts without hard-coding.
+    """
+    env_key = os.getenv("SECRET_KEY")
+    if env_key:
+        return env_key
+
+    key_path = DATA_DIR / "secret_key.txt"
+    try:
+        existing = key_path.read_text(encoding="utf-8").strip()
+        if existing:
+            return existing
+    except Exception:
+        pass
+
+    new_key = secrets.token_hex(32)
+    try:
+        key_path.parent.mkdir(parents=True, exist_ok=True)
+        key_path.write_text(new_key, encoding="utf-8")
+    except Exception:
+        # If persisting fails we still return the generated key; sessions will
+        # reset on restart but the server keeps running.
+        pass
+    return new_key
 
 
 def _port_row(p):
@@ -391,13 +422,19 @@ def create_app() -> Flask:
     _ensure_bootstrap()
 
     app = Flask(__name__, template_folder="templates", static_folder="static")
-    app.config["SECRET_KEY"] = "dev-secret-key"  # set via env in prod
+    app.config["SECRET_KEY"] = _load_or_create_secret_key()
+
+    csrf.init_app(app)
 
     # Login manager
     login_manager = LoginManager()
     login_manager.login_view = "login"
     login_manager.init_app(app)
     app.register_blueprint(withdraw_bp)  # NEW
+
+    @app.context_processor
+    def inject_csrf_token():
+        return {"csrf_token": generate_csrf}
 
     @login_manager.user_loader
     def load_user(user_id: str):
@@ -693,6 +730,12 @@ def user_withdraw_request():
 
     if amount <= 0:
         flash("يرجى إدخال مبلغ صحيح.", "err")
+        return redirect(url_for("user_dashboard"))
+
+    vm_before = user_dashboard_view(current_user.username)
+    available = float(vm_before["wallet"]["available_balance"] or 0.0)
+    if amount > available:
+        flash("المبلغ المطلوب يتجاوز رصيدك المتاح.", "err")
         return redirect(url_for("user_dashboard"))
 
     try:

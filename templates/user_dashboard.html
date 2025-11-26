@@ -160,6 +160,7 @@
 
         <!-- Withdraw (real HTML POST) -->
         <form method="post" action="{{ url_for('user_withdraw_request') }}" style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="number" name="amount_sar" step="0.01" min="0" placeholder="المبلغ (ر.س)" class="input" style="flex:1;min-width:120px;" required>
           <button class="btn secondary" type="submit">طلب سحب</button>
         </form>

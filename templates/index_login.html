@@ -21,6 +21,7 @@
   </div>
 
   <form id="login-form" method="post" action="{{ url_for('login') }}" style="display:grid;gap:12px;margin-top:14px;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <!-- Username -->
     <div>
       <label>اسم المستخدم</label>
@@ -124,5 +125,4 @@
     /* keep your current inline login helpers here (show/hide password, caps, remember me)… */
   </script>
 {% endblock %}
-
 

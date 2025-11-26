@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{% block title %}VulnMap{% endblock %}</title>
 
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -225,6 +226,7 @@
          href="{{ url_for('user_dashboard') }}">لوحة المستخدم</a>
 
       <form method="post" action="{{ url_for('logout') }}" style="margin:0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button class="btn">تسجيل الخروج</button>
       </form>
     {% else %}
@@ -273,30 +275,46 @@
     }, 3800);
   })();
 
-  // 2) Simple progress overlay controller (call from your page scripts if desired)
-  window.VM = window.VM || {};
-  window.VM.progress = {
-    show: function(title, sub){
-      var wrap = document.getElementById('progress-overlay');
-      if(!wrap) return;
-      wrap.style.display = '';
-      wrap.setAttribute('aria-hidden','false');
-      if(title) document.getElementById('po-title').textContent = title;
-      if(sub) document.getElementById('po-sub').textContent = sub;
-      document.getElementById('po-bar-fill').style.width = '12%';
-      setTimeout(function(){ document.getElementById('po-bar-fill').style.width = '72%'; }, 120);
-    },
-    hide: function(){
-      var wrap = document.getElementById('progress-overlay');
-      if(!wrap) return;
-      document.getElementById('po-bar-fill').style.width = '100%';
-      setTimeout(function(){
-        wrap.setAttribute('aria-hidden','true');
-        wrap.style.display = 'none';
-        document.getElementById('po-bar-fill').style.width = '0%';
-      }, 220);
+  (function(){
+    function readCsrfToken(){
+      var meta = document.querySelector('meta[name="csrf-token"]');
+      return meta ? (meta.getAttribute('content') || '') : '';
     }
-  };
+    window.getCsrfToken = readCsrfToken;
+    window.VM = window.VM || {};
+    try {
+      if (!window.VM.csrfToken) {
+        window.VM.csrfToken = readCsrfToken;
+      }
+    } catch (err) {
+      // window.VM may be frozen by feature scripts; ignore assignment errors.
+    }
+
+    if (!window.VM.progress) {
+      window.VM.progress = {
+        show: function(title, sub){
+          var wrap = document.getElementById('progress-overlay');
+          if(!wrap) return;
+          wrap.style.display = '';
+          wrap.setAttribute('aria-hidden','false');
+          if(title) document.getElementById('po-title').textContent = title;
+          if(sub) document.getElementById('po-sub').textContent = sub;
+          document.getElementById('po-bar-fill').style.width = '12%';
+          setTimeout(function(){ document.getElementById('po-bar-fill').style.width = '72%'; }, 120);
+        },
+        hide: function(){
+          var wrap = document.getElementById('progress-overlay');
+          if(!wrap) return;
+          document.getElementById('po-bar-fill').style.width = '100%';
+          setTimeout(function(){
+            wrap.setAttribute('aria-hidden','true');
+            wrap.style.display = 'none';
+            document.getElementById('po-bar-fill').style.width = '0%';
+          }, 220);
+        }
+      };
+    }
+  })();
 </script>
 </body>
 </html>

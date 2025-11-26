@@ -33,10 +33,12 @@
           <td>{{ r.created_at }}</td>
           <td style="display:flex;gap:8px;align-items:center;">
             <form method="post" action="{{ url_for('withdraw_admin.set_status', req_id=r.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="status" value="approved">
               <button class="btn" type="submit">قبول</button>
             </form>
             <form method="post" action="{{ url_for('withdraw_admin.set_status', req_id=r.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="status" value="rejected">
               <button class="btn tertiary" type="submit">رفض</button>
             </form>

@@ -53,6 +53,19 @@
     return String(Date.now()) + Math.random().toString(16).slice(2);
   }
 
+  function csrfToken(){
+    try {
+      if (window.VM && typeof window.VM.csrfToken === 'function') {
+        return window.VM.csrfToken();
+      }
+    } catch (err) {}
+    if (typeof window.getCsrfToken === 'function') {
+      return window.getCsrfToken();
+    }
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? (meta.getAttribute('content') || '') : '';
+  }
+
   // ---------- Row templating & rendering ----------
   function rowHtml(p, kind){
     const common =
@@ -128,7 +141,9 @@
   }, true);
 
   // ---------- Expose global VM ----------
-  window.VM = Object.freeze({
+  var baseVM = (window.VM && typeof window.VM === 'object') ? window.VM : {};
+  window.VM = Object.assign(baseVM, {
+    csrfToken: csrfToken,
     endpoints: getEndpoints(),
     helpers: {
       parseISO,
@@ -182,7 +197,11 @@
 
     fetch(VM.endpoints.withdrawJson, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'fetch' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'fetch',
+        'X-CSRFToken': csrfToken()
+      },
       credentials: 'same-origin',
       body: JSON.stringify({ amount_sar: amt })
     })

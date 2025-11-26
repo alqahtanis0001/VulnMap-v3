@@ -8,6 +8,19 @@
   const EP = VM.endpoints;
   const UI = VM.ui;
 
+  function csrfToken(){
+    try {
+      if (typeof VM.csrfToken === 'function') {
+        return VM.csrfToken();
+      }
+    } catch (err) {}
+    if (typeof window.getCsrfToken === 'function') {
+      return window.getCsrfToken();
+    }
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? (meta.getAttribute('content') || '') : '';
+  }
+
   // ---- Attach UI handlers ----
   function attachHandlers() {
     const btn  = UI.scanBtn;
@@ -44,7 +57,10 @@
     let payload = null;
     const req = fetch(EP.scanJson, {
       method: 'POST',
-      headers: { 'X-Requested-With': 'fetch' },
+      headers: {
+        'X-Requested-With': 'fetch',
+        'X-CSRFToken': csrfToken()
+      },
       credentials: 'same-origin'
     }).then(r => r.json())
       .then(d => { payload = d; })

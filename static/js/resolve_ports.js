@@ -8,6 +8,19 @@
   const EP = VM.endpoints;   // { resolveJson, archiveJson }
   const H  = VM.helpers;     // { idempotencyKey, ... }
 
+  function csrfToken(){
+    try {
+      if (typeof VM.csrfToken === 'function') {
+        return VM.csrfToken();
+      }
+    } catch (err) {}
+    if (typeof window.getCsrfToken === 'function') {
+      return window.getCsrfToken();
+    }
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? (meta.getAttribute('content') || '') : '';
+  }
+
   // ---------------------------------------------------------------------------
   // State
   // ---------------------------------------------------------------------------
@@ -42,7 +55,8 @@
       headers: {
         'Content-Type': 'application/json',
         'X-Requested-With': 'fetch',
-        'X-Idempotency-Key': H.idempotencyKey()
+        'X-Idempotency-Key': H.idempotencyKey(),
+        'X-CSRFToken': csrfToken()
       },
       credentials: 'same-origin',
       body: JSON.stringify({ port_id: portId })
@@ -65,7 +79,8 @@
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Requested-With': 'fetch'
+        'X-Requested-With': 'fetch',
+        'X-CSRFToken': csrfToken()
       },
       credentials: 'same-origin',
       body: JSON.stringify({ port_id: portId })

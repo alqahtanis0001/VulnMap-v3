@@ -90,6 +90,7 @@
   <h3>توليد منافذ للمستخدم</h3>
   <form action="{{ url_for('admin.assign_ports') }}" method="post"
         style="display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:12px;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div>
       <label>اسم المستخدم</label>
       <select name="username" required>
@@ -134,6 +135,7 @@
   <h3>صيانة أسبوعية</h3>
   <p class="small muted">يحذف منافذ <code>generated_ports</code> ويُعيد <strong>الرصيد الحالي</strong> كما كان قبل التنظيف.</p>
   <form method="post" action="{{ url_for('run_weekly_cleanup_route') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button class="btn danger"
             type="submit"
             onclick="return confirm('سيتم حذف جميع ملفات المنافذ المُولدة ثم استعادة الأرصدة. هل أنت متأكد؟')">
@@ -148,6 +150,7 @@
 
   <!-- Quick action for Rayan -->
   <form method="post" action="{{ url_for('admin_reset_balance', username='rayan') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button class="btn danger"
             type="submit"
             onclick="return confirm('سيتم تصفير الرصيد الحالي للمستخدم rayan إلى 0. هل أنت متأكد؟')">
@@ -500,5 +503,4 @@
 
 
 {% endblock %}
-
 
