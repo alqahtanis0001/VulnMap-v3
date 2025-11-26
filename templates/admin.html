@@ -31,6 +31,60 @@
 
 <br>
 
+<div class="card">
+  <h3>أخبار الضربات الكبيرة</h3>
+  <p class="small muted">انشر التوقيت الدقيق للضربة التالية ليظهر للمستخدم عبر زر "البحث عن أخبار".</p>
+
+  {% if news_hit %}
+    <div style="padding:.75rem 1rem;border:1px solid #1e2636;border-radius:12px;background:#0f151f;margin-bottom:12px;">
+      <div style="font-weight:700;">الضربة النشطة:</div>
+      <div class="small muted" style="margin-top:4px;">
+        التاريخ: <strong>{{ news_hit.display_full or news_hit.hit_datetime }}</strong> —
+        المدة: <strong>{{ news_hit.duration_label }}</strong>
+        {% if news_hit.details %}
+          <br>التفاصيل: <span>{{ news_hit.details }}</span>
+        {% endif %}
+      </div>
+    </div>
+  {% else %}
+    <p class="small muted" style="margin:0 0 12px;">لا توجد ضربة منشورة حالياً.</p>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('admin_publish_news_hit') }}" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div style="grid-column:1 / -1;">
+      <label>التاريخ والوقت</label>
+      <input type="datetime-local" name="hit_datetime" required value="{{ news_hit.input_value if news_hit else '' }}">
+    </div>
+    <div>
+      <label>المدة (بالدقائق)</label>
+      <input type="number" name="duration_minutes" min="0" step="1" placeholder="مثال: 90" value="{{ news_hit.duration_minutes if news_hit and news_hit.duration_minutes else '' }}">
+    </div>
+    <div>
+      <label>وصف المدة</label>
+      <input type="text" name="duration_text" placeholder="مثال: من 7:30 إلى 8:45" value="{{ news_hit.duration_text if news_hit and news_hit.duration_text else '' }}">
+    </div>
+    <div style="grid-column:1 / -1;">
+      <label>تفاصيل إضافية</label>
+      <textarea name="details" rows="2" placeholder="أضف ملخصاً قصيراً">{{ news_hit.details if news_hit and news_hit.details else '' }}</textarea>
+    </div>
+    <div style="grid-column:1 / -1;">
+      <button class="btn" type="submit">نشر التوقيت</button>
+    </div>
+  </form>
+  {% if news_hit %}
+    <form method="post" action="{{ url_for('admin_clear_news_hit') }}" style="margin-top:10px;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn tertiary" type="submit"
+              onclick="return confirm('سيتم إخفاء الضربة الحالية من لوحة المستخدم. المتابعة؟');">
+        إخفاء الضربة الحالية
+      </button>
+    </form>
+  {% endif %}
+</div>
+
+<br>
+
 <!-- Live Server Health with axes -->
 <div class="card">
   <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
@@ -503,4 +557,3 @@
 
 
 {% endblock %}
-

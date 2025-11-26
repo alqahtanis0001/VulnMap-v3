@@ -5,13 +5,24 @@
     const el = document.getElementById('app-endpoints');
     if (!el || !el.dataset) {
       console.error('app-endpoints element missing');
-      return { scanJson: '/scan.json', resolveJson: '/resolve.json', archiveJson: '/archive.json' };
+      return {
+        scanJson: '/scan.json',
+        resolveJson: '/resolve.json',
+        archiveJson: '/archive.json',
+        withdrawJson: '/withdraw.json',
+        newsStart: '/news-search/start',
+        newsStatus: '/news-search/status',
+        newsBootstrap: '{}'
+      };
     }
     return {
       scanJson: el.dataset.scanJson || '/scan.json',
       resolveJson: el.dataset.resolveJson || '/resolve.json',
       archiveJson: el.dataset.archiveJson || '/archive.json',
-      withdrawJson: el.dataset.withdrawJson || '/withdraw.json'
+      withdrawJson: el.dataset.withdrawJson || '/withdraw.json',
+      newsStart: el.dataset.newsStart || '/news-search/start',
+      newsStatus: el.dataset.newsStatus || '/news-search/status',
+      newsBootstrap: el.dataset.newsBootstrap || '{}'
     };
   }
 

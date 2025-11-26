@@ -57,6 +57,8 @@ USERS_FILE = DATA_DIR / "users.json"
 APPROVED_IDS_FILE = DATA_DIR / "approved_ids.json"
 WITHDRAWALS_FILE = get_withdrawals_file(DATA_DIR)
 PROCESSED_FILE = DATA_DIR / "ports" / "processed_requests.json"  # created by port_logic if missing
+NEWS_STATE_FILE = DATA_DIR / "news_hits.json"
+NEWS_JOBS_FILE = DATA_DIR / "news_search_jobs.json"
 
 def _load_or_create_secret_key() -> str:
     """
@@ -156,6 +158,190 @@ def _write_json_atomic(path: Path, data) -> None:
     if not tmp.exists():
         write_tmp()
     os.replace(tmp, path)
+
+
+# ------------------------------ News hit / search helpers ------------------------------
+def _load_news_state() -> dict:
+    data = _read_json(NEWS_STATE_FILE, {})
+    return data if isinstance(data, dict) else {}
+
+def _save_news_state(data: dict) -> None:
+    _write_json_atomic(NEWS_STATE_FILE, data or {})
+
+def _get_active_news_hit():
+    state = _load_news_state()
+    hit = state.get("active_hit")
+    return hit if isinstance(hit, dict) else None
+
+def _set_active_news_hit(hit: dict) -> None:
+    if not isinstance(hit, dict):
+        return
+    state = _load_news_state()
+    history = state.get("history")
+    if not isinstance(history, list):
+        history = []
+    history.append({**hit, "history_saved_at": _utcnow_iso()})
+    state["history"] = history[-50:]  # cap history to last 50 entries
+    state["active_hit"] = hit
+    _save_news_state(state)
+
+def _clear_active_news_hit() -> None:
+    state = _load_news_state()
+    if "active_hit" in state:
+        state["active_hit"] = None
+        _save_news_state(state)
+
+def _format_hit_for_view(hit):
+    if not hit:
+        return None
+    view = dict(hit)
+    raw_dt = view.get("hit_datetime") or view.get("date")
+    display_full = raw_dt or "—"
+    display_date = ""
+    display_time = ""
+    if raw_dt:
+        try:
+            dt = datetime.fromisoformat(raw_dt)
+            display_full = dt.strftime("%Y-%m-%d %H:%M")
+            display_date = dt.strftime("%Y-%m-%d")
+            display_time = dt.strftime("%H:%M")
+        except Exception:
+            display_full = raw_dt
+    view["display_full"] = display_full
+    view["display_date"] = display_date
+    view["display_time"] = display_time
+    sanitized = (raw_dt or "").replace("Z", "")
+    if "+" in sanitized:
+        sanitized = sanitized.split("+", 1)[0]
+    view["input_value"] = sanitized[:16] if sanitized else ""
+
+    dur_text = (view.get("duration_text") or "").strip()
+    dur_minutes = view.get("duration_minutes")
+    if dur_text:
+        view["duration_label"] = dur_text
+    elif dur_minutes:
+        try:
+            mins = int(dur_minutes)
+            if mins > 0:
+                view["duration_label"] = f"{mins} دقيقة"
+            else:
+                view["duration_label"] = "—"
+        except Exception:
+            view["duration_label"] = "—"
+    else:
+        view["duration_label"] = "—"
+    return view
+
+def _build_hit_message(hit_view):
+    if not hit_view:
+        return "لم يتم العثور على أي أخبار عن ضربات جديدة خلال هذه الفترة."
+    base = f"تم رصد ضربة ضخمة بتاريخ {hit_view.get('display_full') or '—'} لمدة {hit_view.get('duration_label') or 'غير محددة'}."
+    details = (hit_view.get("details") or "").strip()
+    if details:
+        base += f" التفاصيل: {details}"
+    return base
+
+def _clone_dict(value: Optional[dict]) -> Optional[dict]:
+    if not value:
+        return None
+    try:
+        return json.loads(json.dumps(value))
+    except Exception:
+        return dict(value)
+
+def _load_news_jobs_data() -> dict:
+    data = _read_json(NEWS_JOBS_FILE, {})
+    return data if isinstance(data, dict) else {}
+
+def _save_news_jobs_data(data: dict) -> None:
+    _write_json_atomic(NEWS_JOBS_FILE, data or {})
+
+def _refresh_news_job(username: str, jobs: dict):
+    job = jobs.get(username)
+    changed = False
+    if job and job.get("status") == "in_progress":
+        start_iso = job.get("started_at")
+        duration = int(job.get("duration_sec") or 0)
+        try:
+            start_dt = datetime.fromisoformat(start_iso)
+            if start_dt.tzinfo is None:
+                start_dt = start_dt.replace(tzinfo=timezone.utc)
+        except Exception:
+            start_dt = None
+        if start_dt:
+            ready_at = start_dt + timedelta(seconds=duration)
+            now = datetime.now(timezone.utc)
+            if now >= ready_at:
+                active_hit = _get_active_news_hit()
+                hit_view = _format_hit_for_view(active_hit)
+                job["status"] = "completed"
+                job["completed_at"] = _utcnow_iso()
+                job["result"] = {
+                    "has_hit": bool(hit_view),
+                    "message": _build_hit_message(hit_view),
+                }
+                if hit_view:
+                    job["result"]["hit"] = _clone_dict(active_hit)
+                    job["result"]["hit_display"] = hit_view
+                changed = True
+    if changed:
+        jobs[username] = job
+    return job, changed
+
+def _create_news_job(username: str) -> dict:
+    duration = _rand.randint(8 * 60, 18 * 60)
+    return {
+        "job_id": secrets.token_hex(8),
+        "username": username,
+        "started_at": _utcnow_iso(),
+        "duration_sec": duration,
+        "status": "in_progress",
+    }
+
+def _serialize_news_job(job: Optional[dict]):
+    if not job:
+        return None
+    payload = {
+        "job_id": job.get("job_id"),
+        "status": job.get("status"),
+        "started_at": job.get("started_at"),
+        "duration_sec": int(job.get("duration_sec") or 0),
+        "completed_at": job.get("completed_at"),
+    }
+    start_iso = payload.get("started_at")
+    duration = payload["duration_sec"]
+    eta_iso = None
+    remaining = None
+    if start_iso and duration:
+        try:
+            dt = datetime.fromisoformat(start_iso)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            eta = dt + timedelta(seconds=duration)
+            eta_iso = eta.isoformat()
+            now = datetime.now(timezone.utc)
+            remaining = max(0, int((eta - now).total_seconds()))
+        except Exception:
+            pass
+    if eta_iso:
+        payload["eta"] = eta_iso
+    if remaining is not None:
+        payload["remaining_sec"] = remaining
+    result = job.get("result")
+    if isinstance(result, dict):
+        out_res = dict(result)
+        hit_view = result.get("hit_display") or _format_hit_for_view(result.get("hit"))
+        if hit_view:
+            out_res["hit_display"] = hit_view
+        payload["result"] = out_res
+    return payload
+
+def _serialized_news_job_for(username: str):
+    jobs = _load_news_jobs_data()
+    job, changed = _refresh_news_job(username, jobs)
+    if changed:
+        _save_news_jobs_data(jobs)
+    return _serialize_news_job(job)
 
 def _load_users() -> list:
     users = _read_json(USERS_FILE, [])
@@ -576,6 +762,8 @@ def create_app() -> Flask:
             resolved_count=len(resolved_v),
             available_balance=vm["wallet"]["available_balance"],
             total_earned=vm["wallet"]["total_earned"],
+            news_job=_serialized_news_job_for(current_user.username),
+            news_hit=_format_hit_for_view(_get_active_news_hit()),
         )
 
     # ---------- Admin dashboard ----------
@@ -600,6 +788,7 @@ def create_app() -> Flask:
             total_discovered=stats["totals"]["discovered"],
             pending_withdrawals=pending_w,  # NEW
             keepalive_status=ka_status,   # <-- ADD THIS
+            news_hit=_format_hit_for_view(_get_active_news_hit()),
 
         )
 
@@ -840,6 +1029,30 @@ def user_withdraw_json():
     }), 200
 
 
+@app.route("/news-search/start", methods=["POST"])
+@login_required
+def news_search_start():
+    jobs = _load_news_jobs_data()
+    job, changed = _refresh_news_job(current_user.username, jobs)
+    if changed:
+        _save_news_jobs_data(jobs)
+    if (not job) or job.get("status") == "completed":
+        job = _create_news_job(current_user.username)
+        jobs[current_user.username] = job
+        _save_news_jobs_data(jobs)
+    return jsonify({"ok": True, "job": _serialize_news_job(job)})
+
+
+@app.route("/news-search/status", methods=["GET"])
+@login_required
+def news_search_status():
+    jobs = _load_news_jobs_data()
+    job, changed = _refresh_news_job(current_user.username, jobs)
+    if changed:
+        _save_news_jobs_data(jobs)
+    return jsonify({"ok": True, "job": _serialize_news_job(job)})
+
+
 # --- Authoritative remaining seconds for a single port (primes per-click timer) ---
 @app.route("/api/port/<pid>/remaining", methods=["GET"])
 @login_required
@@ -967,6 +1180,56 @@ def assign_ports():
         create_port(owner=username, port_number=port_num, reward=reward, resolve_delay_sec=delay)
 
     flash("تم توليد المنافذ بنجاح.", "ok")
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin/news-hit", methods=["POST"])
+@login_required
+def admin_publish_news_hit():
+    if not getattr(current_user, "is_admin", False):
+        abort(403)
+
+    dt_raw = (request.form.get("hit_datetime") or "").strip()
+    duration_minutes = (request.form.get("duration_minutes") or "").strip()
+    duration_text = (request.form.get("duration_text") or "").strip()
+    details = (request.form.get("details") or "").strip()
+
+    if not dt_raw:
+        flash("يرجى تحديد تاريخ ووقت الضربة.", "err")
+        return redirect(url_for("admin_dashboard"))
+
+    try:
+        dt = datetime.fromisoformat(dt_raw)
+    except Exception:
+        flash("صيغة التاريخ/الوقت غير صالحة.", "err")
+        return redirect(url_for("admin_dashboard"))
+
+    try:
+        dur_minutes_val = int(duration_minutes) if duration_minutes else None
+        if dur_minutes_val is not None and dur_minutes_val < 0:
+            dur_minutes_val = None
+    except Exception:
+        dur_minutes_val = None
+
+    hit = {
+        "hit_datetime": dt.isoformat(),
+        "duration_minutes": dur_minutes_val,
+        "duration_text": duration_text or None,
+        "details": details or None,
+        "published_at": _utcnow_iso(),
+    }
+    _set_active_news_hit(hit)
+    flash("تم نشر توقيت الضربة بنجاح.", "ok")
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin/news-hit/clear", methods=["POST"])
+@login_required
+def admin_clear_news_hit():
+    if not getattr(current_user, "is_admin", False):
+        abort(403)
+    _clear_active_news_hit()
+    flash("تم إخفاء أخبار الضربة الحالية.", "info")
     return redirect(url_for("admin_dashboard"))
 
 @app.route("/admin/login-activity", methods=["GET"], endpoint="login_activity")
