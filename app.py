@@ -17,6 +17,7 @@ from typing import Optional, List
 from datetime import datetime, timezone, timedelta
 from scripts.keep_alive import start_keep_alive, read_keepalive_status
 from withdrawals_path import get_withdrawals_file
+from rayan_wallet import is_rayan, reset_rayan_wallet
 
 from flask import (
     Flask, render_template, request, redirect, url_for, flash, abort, jsonify
@@ -608,6 +609,10 @@ def admin_reset_balance(username):
 
         # 3) Recreate a ledger port with reward == approved_sum => available becomes 0
         _write_ledger_port(uname, approved_sum)
+
+        # 4) Persist Rayan's wallet snapshot so it stays zeroed across restarts
+        if is_rayan(uname):
+            reset_rayan_wallet(DATA_DIR, total_earned=approved_sum)
 
         flash(f"تم تصفير الرصيد الحالي للمستخدم {uname}. (حُذف {deleted} ملف منافذ لهذا المستخدم)", "ok")
     except Exception as e:

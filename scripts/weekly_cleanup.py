@@ -7,6 +7,7 @@ from pathlib import Path
 from datetime import datetime, timezone
 from typing import Dict, Any, List
 from withdrawals_path import get_withdrawals_file
+from rayan_wallet import is_rayan, load_rayan_wallet
 
 # ---------- Paths ----------
 ROOT = Path(__file__).resolve().parents[1]        # project root (contains app.py, data/, templates/, etc.)
@@ -129,11 +130,18 @@ def run_weekly_cleanup() -> Dict[str, Any]:
     for uname in usernames:
         approved = _approved_sum_for(uname)
         resolved_total = _scan_resolved_total_for(uname)
-        available_pre = round(max(0.0, resolved_total - approved), 2)
+        wallet = {
+            "total_earned": resolved_total,
+            "available_balance": round(max(0.0, resolved_total - approved), 2),
+        }
+
+        if is_rayan(uname):
+            wallet = load_rayan_wallet(DATA_DIR, wallet)
+
         snapshot[uname] = {
-            "available_pre": available_pre,
+            "available_pre": wallet["available_balance"],
             "approved_sum": approved,
-            "resolved_total_pre": resolved_total,
+            "resolved_total_pre": wallet["total_earned"],
         }
     _write_json_atomic(SNAPSHOT_LATEST, {"ts": started, "users": snapshot})
     _write_json_atomic(LEDGER_DIR / f"wallet_{started.replace(':','').replace('-','')}.json", {"ts": started, "users": snapshot})
