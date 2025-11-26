@@ -23,7 +23,7 @@
     bootstrap = {};
   }
   let job = bootstrap.job || null;
-  updatePreview(bootstrap.hit || null);
+  updatePreview(null, false);
 
   let tickTimer = null;
   let pollTimer = null;
@@ -46,12 +46,12 @@
     statusPill.textContent = label;
   }
 
-  function updatePreview(hitView){
+  function updatePreview(hitView, show){
     if (!preview) return;
-    if (hitView && hitView.display_full) {
+    if (show && hitView && hitView.display_full) {
       preview.innerHTML = 'آخر توقيت منشور: <strong>' + hitView.display_full + '</strong> — ' + (hitView.duration_label || 'غير محدد');
     } else {
-      preview.textContent = 'لا توجد أخبار منشورة حالياً. سيتم تحديثك بمجرد توفر ضربة جديدة.';
+      preview.textContent = 'سيظهر تقرير الذكاء الاصطناعي فور اكتمال البحث وتحليل قاعدة بيانات VulnMap.';
     }
   }
 
@@ -63,7 +63,7 @@
     if (resultBox) resultBox.hidden = true;
     if (btn) {
       btn.disabled = false;
-      btn.textContent = 'البحث عن اخبار';
+      btn.textContent = 'تشغيل البحث الذكي';
     }
   }
 
@@ -79,24 +79,27 @@
     if (job.status === 'in_progress') {
       if (btn) {
         btn.disabled = true;
-        btn.textContent = 'جارٍ البحث...';
+        btn.textContent = 'الذكاء الاصطناعي يعمل...';
       }
       if (progressWrap) progressWrap.hidden = false;
       if (resultBox) resultBox.hidden = true;
-      setStatus('running', 'جارٍ البحث');
+      setStatus('running', 'الذكاء الاصطناعي يبحث');
       updateProgressUI();
       tickTimer = setInterval(updateProgressUI, 1000);
       scheduleStatusFetch(30000);
     } else if (job.status === 'completed') {
-      setStatus('done', job.result && job.result.has_hit ? 'خبر عاجل' : 'لا يوجد');
+      setStatus('done', job.result && job.result.has_hit ? 'خبر عاجل من الذكاء الاصطناعي' : 'انتهى التحليل');
       if (btn) {
         btn.disabled = false;
-        btn.textContent = 'ابحث من جديد';
+        btn.textContent = 'تشغيل مهمة جديدة';
       }
       if (progressWrap) progressWrap.hidden = false;
       if (progressFill) progressFill.style.width = '100%';
       if (timerEl) timerEl.textContent = 'اكتمل البحث.';
       showResult(job.result || null);
+      if (!(job.result && job.result.has_hit)) {
+        updatePreview(null, false);
+      }
     } else {
       resetUI();
     }
@@ -104,10 +107,10 @@
 
   function startSearch(){
     if (resultBox) resultBox.hidden = true;
-    setStatus('running', 'جارٍ البحث');
+    setStatus('running', 'الذكاء الاصطناعي يبحث');
     if (progressWrap) progressWrap.hidden = false;
     if (progressFill) progressFill.style.width = '3%';
-    if (timerEl) timerEl.textContent = 'جارٍ تهيئة البحث...';
+    if (timerEl) timerEl.textContent = 'يتم تشغيل العقدة البعيدة للذكاء الاصطناعي والتحكم في زحف الأخبار...';
 
     fetch(endpoints.newsStart || '/news-search/start', {
       method: 'POST',
@@ -140,7 +143,7 @@
       if (progressFill) progressFill.style.width = (progress * 100).toFixed(2) + '%';
       const remainingMs = Math.max(0, eta - now);
       const remainingSec = Math.ceil(remainingMs / 1000);
-      if (timerEl) timerEl.textContent = 'الوقت المتبقي: ' + formatRemaining(remainingSec);
+      if (timerEl) timerEl.textContent = 'الذكاء الاصطناعي يجمع الأدلة... الوقت المتبقي: ' + formatRemaining(remainingSec);
       if (remainingSec <= 1) {
         scheduleStatusFetch(1500);
       }
@@ -149,12 +152,12 @@
 
   function formatRemaining(totalSeconds){
     if (!Number.isFinite(totalSeconds) || totalSeconds <= 0) {
-      return 'جارٍ إنهاء البحث...';
+      return 'جارٍ إنهاء التحليل العقلي...';
     }
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     if (minutes > 0) {
-      return minutes + ' د ' + seconds.toString().padStart(2, '0') + ' ث';
+      return minutes + ' د ' + seconds.toString().padStart(2, '0') + ' ث من معالجة VulnMap';
     }
     return seconds + ' ثوانٍ';
   }
@@ -164,10 +167,10 @@
     resultBox.hidden = false;
     const hasHit = result && result.has_hit;
     if (resultTitle) {
-      resultTitle.textContent = hasHit ? 'تم رصد ضربة جديدة' : 'لا توجد ضربات في هذه الفترة';
+      resultTitle.textContent = hasHit ? 'ذكاء VulnMap رصد ضربة جديدة' : 'أتم الذكاء الاصطناعي المسح ولم يجد ضربات';
     }
     if (resultBody) {
-      resultBody.textContent = result ? (result.message || '') : '';
+      resultBody.textContent = result ? (result.message || 'لم يُرجع الذكاء الاصطناعي أي تفاصيل إضافية.') : '';
     }
     if (hitMeta) {
       if (hasHit && result.hit_display) {
@@ -183,9 +186,9 @@
       }
     }
     if (hasHit && result.hit_display) {
-      updatePreview(result.hit_display);
-    } else if (!hasHit) {
-      updatePreview(null);
+      updatePreview(result.hit_display, true);
+    } else {
+      updatePreview(null, false);
     }
   }
 

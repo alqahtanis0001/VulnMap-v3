@@ -237,13 +237,13 @@
         <div id="news-search-module" class="news-module">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
             <div>
-              <div style="font-weight:700;">أخبار الضربات</div>
-              <div class="small muted" style="margin-top:2px;">إبحث عن التوقيت القادم للضربة الكبيرة.</div>
+              <div style="font-weight:700;">أخبار الضربات (ذكاء اصطناعي بعيد)</div>
+              <div class="small muted" style="margin-top:2px;">يُشغّل نظام تحكم ذكي يبحث عبر الإنترنت ثم يعبر قاعدة بيانات VulnMap عن الضربات المقبلة.</div>
             </div>
             <span class="news-status-pill" data-role="news-status-pill" data-state="idle">هادئ</span>
           </div>
           <button class="btn" type="button" data-role="news-button" style="width:100%;margin-top:12px;">
-            البحث عن اخبار
+            تشغيل البحث الذكي
           </button>
           <div class="news-progress-shell" data-role="news-progress-wrap" hidden>
             <div class="news-progress-fill" data-role="news-progress-fill" style="width:0%;"></div>
@@ -255,11 +255,7 @@
             <div class="news-hit-meta" data-role="news-hit-meta"></div>
           </div>
           <div class="small muted" style="margin-top:8px;" data-role="news-preview">
-            {% if news_hit %}
-              آخر توقيت منشور: <strong>{{ news_hit.display_full }}</strong> — {{ news_hit.duration_label }}
-            {% else %}
-              لا توجد أخبار منشورة حالياً. سيتم تحديثك بمجرد نشر ضربة جديدة.
-            {% endif %}
+            سيظهر تقرير الذكاء الاصطناعي فور اكتمال البحث وتحليل قاعدة بيانات VulnMap.
           </div>
         </div>
       </div>
