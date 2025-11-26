@@ -8,10 +8,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple
 from withdrawals_path import get_withdrawals_file
+from data_paths import get_data_dir
 
 # Project roots relative to this file
 ROOT = Path(__file__).resolve().parents[1]  # go up from admin/ -> project root
-DATA_DIR = ROOT / "data"
+DATA_DIR = get_data_dir()
 
 def _utcnow_iso() -> str:
     return datetime.now(timezone.utc).isoformat()

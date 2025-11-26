@@ -8,10 +8,11 @@ from datetime import datetime, timezone
 from typing import Dict, Any, List
 from withdrawals_path import get_withdrawals_file
 from rayan_wallet import is_rayan, load_rayan_wallet
+from data_paths import get_data_dir
 
 # ---------- Paths ----------
 ROOT = Path(__file__).resolve().parents[1]        # project root (contains app.py, data/, templates/, etc.)
-DATA_DIR = ROOT / "data"
+DATA_DIR = get_data_dir()
 USERS_FILE = DATA_DIR / "users.json"
 WITHDRAWALS_FILE = get_withdrawals_file(DATA_DIR)
 GEN_DIR = DATA_DIR / "ports" / "generated_ports"

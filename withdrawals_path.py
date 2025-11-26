@@ -9,9 +9,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from data_paths import get_data_dir
+
 
 ROOT = Path(__file__).resolve().parent
-DATA_DIR = ROOT / "data"
+DATA_DIR = get_data_dir()
 
 
 def get_withdrawals_file(data_dir: Path = DATA_DIR) -> Path:

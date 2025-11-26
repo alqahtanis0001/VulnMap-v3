@@ -20,6 +20,7 @@ from datetime import datetime, timezone, timedelta
 from scripts.keep_alive import start_keep_alive, read_keepalive_status
 from withdrawals_path import get_withdrawals_file
 from rayan_wallet import is_rayan, reset_rayan_wallet
+from data_paths import get_data_dir
 
 from flask import (
     Flask, render_template, request, redirect, url_for, flash, abort, jsonify
@@ -52,7 +53,7 @@ csrf = CSRFProtect()
 
 # ------------------------------ Project paths ------------------------------
 ROOT = Path(__file__).resolve().parent
-DATA_DIR = ROOT / "data"
+DATA_DIR = get_data_dir()
 LOGIN_LOG_DIR = DATA_DIR / "login_activity"
 RIYADH_TZ = timezone(timedelta(hours=3))
 
