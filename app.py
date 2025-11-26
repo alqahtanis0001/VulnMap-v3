@@ -54,6 +54,7 @@ csrf = CSRFProtect()
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "data"
 LOGIN_LOG_DIR = DATA_DIR / "login_activity"
+RIYADH_TZ = timezone(timedelta(hours=3))
 
 USERS_FILE = DATA_DIR / "users.json"
 APPROVED_IDS_FILE = DATA_DIR / "approved_ids.json"
@@ -736,6 +737,36 @@ def _tail_login_activity(max_lines: int = 300) -> List[str]:
         if len(lines) >= max_lines:
             break
     return lines[-max_lines:]
+
+def _format_login_relative(ts: Optional[datetime]) -> str:
+    if not ts:
+        return ""
+    now = datetime.now(timezone.utc)
+    try:
+        base = ts.astimezone(timezone.utc)
+    except Exception:
+        base = ts
+    delta = now - base
+    total_seconds = int(delta.total_seconds())
+    future = total_seconds < 0
+    seconds = abs(total_seconds)
+    if seconds < 5:
+        return "بعد لحظات" if future else "الآن"
+    units = [
+        (86400, "يوم"),
+        (3600, "ساعة"),
+        (60, "دقيقة"),
+        (1, "ثانية"),
+    ]
+    value = 0
+    label = "ثانية"
+    for unit_seconds, unit_label in units:
+        if seconds >= unit_seconds:
+            value = max(1, seconds // unit_seconds)
+            label = unit_label
+            break
+    prefix = "بعد" if future else "منذ"
+    return f"{prefix} {value} {label}"
 
 
 # ------------------------------ Data bootstrap ------------------------------
@@ -1543,8 +1574,66 @@ def view_login_activity():
     if not getattr(current_user, "is_admin", False):
         return redirect(url_for("user_dashboard"))
 
-    lines = _tail_login_activity(300)
-    return render_template("admin_login_activity.html", lines=lines)
+    raw_lines = _tail_login_activity(300)
+    entries = []
+    for line in raw_lines:
+        raw = (line or "").strip()
+        if not raw:
+            continue
+        ts_text = None
+        ts_dt: Optional[datetime] = None
+        message = raw
+        if " - " in raw:
+            ts_text, message = raw.split(" - ", 1)
+            try:
+                ts_dt = datetime.fromisoformat(ts_text)
+            except Exception:
+                ts_dt = None
+        username = None
+        status_label = "نشاط"
+        status_variant = "neutral"
+        description = message.strip()
+        msg_lower = description.lower()
+        if msg_lower.endswith("logged in"):
+            username = description[:-len("logged in")].strip()
+            status_label = "دخول ناجح"
+            status_variant = "success"
+            description = f"تم تسجيل دخول {username}"
+        elif "failed" in msg_lower:
+            status_label = "محاولة فاشلة"
+            status_variant = "danger"
+        initials = (username or "?")[:2].upper()
+        relative = _format_login_relative(ts_dt)
+        ts_display = ts_text or raw
+        if ts_dt:
+            try:
+                ts_local = ts_dt.astimezone(RIYADH_TZ)
+            except Exception:
+                ts_local = ts_dt
+            ts_display = ts_local.strftime("%Y-%m-%d %H:%M:%S (UTC+3)")
+        entries.append({
+            "raw": raw,
+            "timestamp": ts_text or "",
+            "timestamp_display": ts_display,
+            "relative": relative,
+            "username": username,
+            "status_label": status_label,
+            "status_variant": status_variant,
+            "description": description,
+            "initials": initials,
+        })
+
+    success_count = sum(1 for e in entries if e["status_variant"] == "success")
+    failure_count = sum(1 for e in entries if e["status_variant"] == "danger")
+    other_count = max(0, len(entries) - success_count - failure_count)
+    return render_template(
+        "admin_login_activity.html",
+        entries=entries,
+        total_entries=len(entries),
+        success_count=success_count,
+        failure_count=failure_count,
+        other_count=other_count,
+    )
 
 # ------------------------------ Admin metrics (JSON) ------------------------------
 try:

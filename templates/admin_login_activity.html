@@ -1,14 +1,196 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="card">
-  <h2>سجل تسجيل الدخول</h2>
-  {% if lines and lines|length > 0 %}
-    <pre style="white-space:pre-wrap;max-height:60vh;overflow:auto;border:1px solid #333;padding:10px;border-radius:8px;">
-{{ lines|join('\n') }}
-    </pre>
+{% set entries = entries or [] %}
+<div class="card login-log-card">
+  <div class="log-head">
+    <div>
+      <h2 style="margin:0;">سجل تسجيل الدخول</h2>
+      <p class="muted small" style="margin-top:4px;">
+        آخر {{ total_entries or 0 }} حدث (بترتيب زمني من الأقدم إلى الأحدث)
+      </p>
+    </div>
+    <div class="btn-group">
+      <a class="btn secondary" href="{{ url_for('admin_dashboard') }}">⬅ العودة للوحة التحكم</a>
+    </div>
+  </div>
+
+  {% if entries %}
+    <div class="log-metrics">
+      <div class="log-metric metric-success">
+        <div class="metric-label">دخول ناجح</div>
+        <div class="metric-value">{{ success_count or 0 }}</div>
+      </div>
+      <div class="log-metric metric-danger">
+        <div class="metric-label">محاولات فاشلة</div>
+        <div class="metric-value">{{ failure_count or 0 }}</div>
+      </div>
+      <div class="log-metric metric-neutral">
+        <div class="metric-label">سجلات أخرى</div>
+        <div class="metric-value">{{ other_count or 0 }}</div>
+      </div>
+    </div>
+
+    <div class="log-list">
+      {% for entry in entries %}
+        <article class="log-entry" title="{{ entry.raw }}">
+          <div class="log-entry__avatar">
+            {{ entry.initials }}
+          </div>
+          <div class="log-entry__body">
+            <div class="log-entry__top">
+              <span class="status-pill status-pill--{{ entry.status_variant }}">
+                {{ entry.status_label }}
+              </span>
+              {% if entry.username %}
+                <span class="log-entry__user">@{{ entry.username }}</span>
+              {% endif %}
+            </div>
+            <div class="log-entry__desc">
+              {{ entry.description }}
+            </div>
+            <div class="log-entry__meta small muted">
+              <span>{{ entry.timestamp_display }}</span>
+              {% if entry.relative %}
+                <span>• {{ entry.relative }}</span>
+              {% endif %}
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
   {% else %}
     <p class="muted">لا يوجد سجلات حتى الآن.</p>
   {% endif %}
-  <a class="btn secondary" href="{{ url_for('admin_dashboard') }}" style="margin-top:10px;">⬅ رجوع</a>
 </div>
+
+<style>
+.login-log-card{
+  padding:20px;
+}
+.log-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+.log-metrics{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+  gap:10px;
+  margin-bottom:18px;
+}
+.log-metric{
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:12px 14px;
+  background:#0d111b;
+}
+.metric-label{
+  font-size:.9em;
+  color:var(--muted);
+}
+.metric-value{
+  font-size:1.8em;
+  font-weight:800;
+  margin-top:4px;
+}
+.metric-success{
+  background:linear-gradient(120deg, rgba(43,110,85,.2), transparent), #0f1618;
+  border-color:#1f503b;
+}
+.metric-danger{
+  background:linear-gradient(120deg, rgba(131,40,50,.25), transparent), #170f12;
+  border-color:#6b2530;
+}
+.metric-neutral{
+  background:linear-gradient(120deg, rgba(63,70,102,.25), transparent), #11131d;
+  border-color:#2f354d;
+}
+.log-list{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.log-entry{
+  display:flex;
+  gap:14px;
+  padding:14px 16px;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:linear-gradient(180deg, rgba(255,255,255,.02), transparent 25%), #0f141c;
+  box-shadow:0 4px 14px rgba(0,0,0,.28);
+}
+.log-entry__avatar{
+  width:46px;
+  height:46px;
+  border-radius:12px;
+  background:linear-gradient(135deg, #1f2740, #11182c);
+  border:1px solid #262f47;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  letter-spacing:.5px;
+}
+.log-entry__body{
+  flex:1;
+}
+.log-entry__top{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:6px;
+}
+.log-entry__user{
+  color:#b4c2ff;
+  font-weight:600;
+}
+.log-entry__desc{
+  font-size:1.02em;
+  margin-bottom:8px;
+}
+.log-entry__meta{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.status-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  border-radius:999px;
+  padding:0.25rem 0.65rem;
+  font-size:.85em;
+  border:1px solid #2a3348;
+  background:#171f2d;
+  color:#dfe5ff;
+}
+.status-pill--success{
+  border-color:#1c5037;
+  background:#12231b;
+  color:#bdf0d2;
+}
+.status-pill--danger{
+  border-color:#6b252e;
+  background:#2a1518;
+  color:#ffcdd4;
+}
+.status-pill--neutral{
+  border-color:#2e3a57;
+  background:#151b2b;
+  color:#d3d9f3;
+}
+@media (max-width:640px){
+  .log-entry{
+    flex-direction:column;
+  }
+  .log-entry__avatar{
+    width:40px;
+    height:40px;
+  }
+}
+</style>
 {% endblock %}
