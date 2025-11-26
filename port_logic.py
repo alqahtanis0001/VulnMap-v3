@@ -6,7 +6,6 @@
 # - Read helpers for dashboards and admin stats
 
 from __future__ import annotations
-# at the top with other imports
 import time
 
 import json
@@ -47,7 +46,6 @@ def _read_json(path: Path, default):
     except Exception:
         return default
 
-# REPLACE the whole _write_json_atomic with this:
 def _write_json_atomic(path: Path, data) -> None:
     """
     Windows-safe atomic write with retries.

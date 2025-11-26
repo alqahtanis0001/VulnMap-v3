@@ -6,7 +6,6 @@
 # - Business logic in port_logic.py
 
 from __future__ import annotations
-# add near other flask imports at the top if missing
 from flask import current_app
 import time
 import os
