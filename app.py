@@ -8,6 +8,7 @@
 from __future__ import annotations
 from flask import current_app
 import time
+import threading
 import os
 import re
 import secrets
@@ -60,6 +61,7 @@ WITHDRAWALS_FILE = get_withdrawals_file(DATA_DIR)
 PROCESSED_FILE = DATA_DIR / "ports" / "processed_requests.json"  # created by port_logic if missing
 NEWS_STATE_FILE = DATA_DIR / "news_hits.json"
 NEWS_JOBS_FILE = DATA_DIR / "news_search_jobs.json"
+SCHEDULED_PORTS_FILE = DATA_DIR / "ports" / "scheduled_ports.json"
 
 def _load_or_create_secret_key() -> str:
     """
@@ -159,6 +161,14 @@ def _write_json_atomic(path: Path, data) -> None:
     if not tmp.exists():
         write_tmp()
     os.replace(tmp, path)
+
+
+def _load_scheduled_jobs() -> list:
+    data = _read_json(SCHEDULED_PORTS_FILE, [])
+    return data if isinstance(data, list) else []
+
+def _save_scheduled_jobs(items: list) -> None:
+    _write_json_atomic(SCHEDULED_PORTS_FILE, items or [])
 
 
 # ------------------------------ News hit / search helpers ------------------------------
