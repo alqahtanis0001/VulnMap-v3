@@ -127,6 +127,16 @@ def get_wallet_snapshot(username: str) -> Optional[Dict[str, float]]:
     return None
 
 
+def clear_wallet_snapshot(username: str) -> None:
+    uname = (username or "").strip().lower()
+    if not uname:
+        return
+    snapshots = _read_wallet_snapshots()
+    if uname in snapshots:
+        snapshots.pop(uname, None)
+        _write_json_atomic(WALLET_SNAPSHOT_FILE, snapshots)
+
+
 def _format_withdraw_ts(ts: str | None) -> str:
     if not ts:
         return "—"

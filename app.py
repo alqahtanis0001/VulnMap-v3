@@ -41,6 +41,7 @@ from port_logic import (
     archive_port,
     unarchive_port,
     admin_stats_view,
+    clear_wallet_snapshot,
 )
 
 from admin.withdraw_requests import bp as withdraw_bp  # NEW
@@ -1057,19 +1058,10 @@ def admin_reset_balance(username):
         return redirect(url_for("admin_dashboard"))
 
     try:
-        # 1) Compute approved sum for the user
-        approved_sum = _approved_sum_for(uname)
-
-        # 2) Purge only this user's generated ports
         deleted = _purge_generated_ports_for(uname)
-
-        # 3) Recreate a ledger port with reward == approved_sum => available becomes 0
-        _write_ledger_port(uname, approved_sum)
-
-        # 4) Persist Rayan's wallet snapshot so it stays zeroed across restarts
+        clear_wallet_snapshot(uname)
         if is_rayan(uname):
-            reset_rayan_wallet(DATA_DIR, total_earned=approved_sum)
-
+            reset_rayan_wallet(DATA_DIR, total_earned=0.0)
         flash(f"تم تصفير الرصيد الحالي للمستخدم {uname}. (حُذف {deleted} ملف منافذ لهذا المستخدم)", "ok")
     except Exception as e:
         flash(f"فشل التصفير: {e}", "err")
