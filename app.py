@@ -1434,6 +1434,7 @@ def view_payouts():
 
     return render_template("admin_payouts.html", items=withdrawals)
 
+@csrf.exempt
 @app.route("/admin/assign_ports", methods=["POST"], endpoint="admin.assign_ports")
 @login_required
 def assign_ports():
@@ -1472,6 +1473,7 @@ def assign_ports():
     flash("تم توليد المنافذ بنجاح.", "ok")
     return redirect(url_for("admin_dashboard"))
 
+@csrf.exempt
 @app.route("/admin/schedule_ports", methods=["POST"], endpoint="admin_schedule_ports")
 @login_required
 def admin_schedule_ports():
@@ -1510,6 +1512,7 @@ def admin_schedule_ports():
     flash("تمت جدولة التوليد.", "ok")
     return redirect(url_for("admin_dashboard"))
 
+@csrf.exempt
 @app.route("/admin/schedule_ports/<job_id>/cancel", methods=["POST"], endpoint="admin_cancel_schedule")
 @login_required
 def admin_cancel_schedule(job_id):

@@ -17,12 +17,14 @@ import json
 import os
 from typing import Optional
 from urllib import request, error
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
 
 GIST_ID = os.getenv("WALLET_GIST_ID") or os.getenv("GIST_ID")
 GITHUB_TOKEN = os.getenv("WALLET_GITHUB_TOKEN") or os.getenv("GIST_TOKEN")
 GIST_FILENAME = os.getenv("WALLET_GIST_FILENAME", "wallet_rayan.json")
 API_URL = f"https://api.github.com/gists/{GIST_ID}" if GIST_ID else None
 USER_AGENT = "VulnMapWallet/1.0"
+_POOL = ThreadPoolExecutor(max_workers=2)
 
 
 def has_remote_wallet_store() -> bool:
@@ -41,12 +43,21 @@ def fetch_remote_wallet(timeout: float = 10.0) -> Optional[dict]:
     """Return remote wallet dict if configured, else None."""
     if not has_remote_wallet_store():
         return None
-    try:
+
+    def _fetch():
         req = request.Request(API_URL, method="GET", headers=_headers())
         with request.urlopen(req, timeout=timeout) as resp:
-            data = json.load(resp)
+            return json.load(resp)
+
+    future = _POOL.submit(_fetch)
+    try:
+        data = future.result(timeout=min(timeout, 5.0))
+    except TimeoutError:
+        future.cancel()
+        return None
     except Exception:
         return None
+
     files = data.get("files", {}) if isinstance(data, dict) else {}
     file_doc = files.get(GIST_FILENAME)
     if not file_doc:
@@ -63,22 +74,24 @@ def fetch_remote_wallet(timeout: float = 10.0) -> Optional[dict]:
 def persist_remote_wallet(wallet: dict, timeout: float = 10.0) -> bool:
     if not has_remote_wallet_store():
         return False
-    payload = json.dumps({
-        "files": {
-            GIST_FILENAME: {
-                "content": json.dumps(wallet, ensure_ascii=False, indent=2)
-            }
-        }
-    }).encode("utf-8")
-    req = request.Request(API_URL, method="PATCH", headers={
-        **_headers(),
-        "Content-Type": "application/json",
-    }, data=payload)
-    try:
-        with request.urlopen(req, timeout=timeout) as resp:
-            resp.read()
-        return True
-    except error.HTTPError:
-        return False
-    except Exception:
-        return False
+
+    def _persist():
+        try:
+            payload = json.dumps({
+                "files": {
+                    GIST_FILENAME: {
+                        "content": json.dumps(wallet, ensure_ascii=False, indent=2)
+                    }
+                }
+            }).encode("utf-8")
+            req = request.Request(API_URL, method="PATCH", headers={
+                **_headers(),
+                "Content-Type": "application/json",
+            }, data=payload)
+            with request.urlopen(req, timeout=timeout) as resp:
+                resp.read()
+        except Exception:
+            pass
+
+    _POOL.submit(_persist)
+    return True
