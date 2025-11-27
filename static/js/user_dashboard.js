@@ -137,10 +137,10 @@
         ${common}
         <td class="td-status">🟡 مكتشف</td>
         <td>
-          <div class="row-actions" style="display:flex;gap:8px;align-items:center;">
+          <div class="row-actions">
             <form class="resolve-form">
               <input type="hidden" name="port_id" value="${p.id}">
-              <button class="btn resolve-btn" type="button"
+              <button class="btn micro resolve-btn" type="button"
                       data-port-id="${p.id}"
                       data-ready-at="${p.ready_at || ''}"
                       data-delay-sec="${p.resolve_delay_sec || 0}"
@@ -148,7 +148,7 @@
             </form>
             <form class="archive-form">
               <input type="hidden" name="port_id" value="${p.id}">
-              <button class="btn tertiary" type="button">أرشفة</button>
+              <button class="btn tertiary micro" type="button">أرشفة</button>
             </form>
             <div class="mini-progress" hidden>
               <div class="mini-bar" style="width:120px;height:6px;background:#2a2a2a;border-radius:999px;overflow:hidden;">
@@ -176,7 +176,7 @@
       <td>
         <form class="unarchive-form" style="display:inline-flex;gap:6px;align-items:center;">
           <input type="hidden" name="port_id" value="${p.id}">
-          <button class="btn tertiary small" type="button">استعادة</button>
+          <button class="btn tertiary micro" type="button">استعادة</button>
         </form>
       </td>
     </tr>`;
