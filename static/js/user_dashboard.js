@@ -332,6 +332,117 @@
     setInterval(fetchMetrics, 5000);
   })();
 
+  // --- Device Intelligence widget ---
+  (function initDeviceIntel(){
+    const root = document.querySelector('[data-device-intel]');
+    if (!root) return;
+    const listEl = root.querySelector('[data-device-intel-list]');
+    const pillEl = root.querySelector('[data-device-intel-pill]');
+    const summaryEl = root.querySelector('[data-device-intel-summary]');
+    const hintEl = root.querySelector('[data-device-intel-hints]');
+    const ua = (navigator.userAgent || '').toLowerCase();
+
+    function classifyDevice(){
+      if (/tablet|ipad/.test(ua)) {
+        return { label: 'جهاز لوحي', detail: 'واجهة لمس عريضة', icon: '📟', state: 'tablet' };
+      }
+      if (/mobile|iphone|android/.test(ua)) {
+        return { label: 'جهاز محمول', detail: 'نقل البيانات مضغوط للحفاظ على البطارية', icon: '📱', state: 'mobile' };
+      }
+      return { label: 'جهاز مكتبي', detail: 'إخراج كامل لعناصر لوحة التحكم', icon: '🖥️', state: 'desktop' };
+    }
+
+    function detectOS(){
+      if (/windows nt 1[01]/.test(ua)) return { label: 'Windows 10/11', detail: 'بيئة Win64' };
+      if (/windows nt/.test(ua)) return { label: 'Windows (Legacy)', detail: 'بيئة Win32' };
+      if (/mac os x/.test(ua)) return { label: 'macOS', detail: 'نواة Darwin' };
+      if (/android/.test(ua)) return { label: 'Android', detail: 'نواة Linux مهيأة' };
+      if (/iphone|ipad|ipod/.test(ua)) return { label: 'iOS / iPadOS', detail: 'معمارية ARM' };
+      if (/linux/.test(ua)) return { label: 'Linux', detail: 'توزيعة غير محددة' };
+      return { label: 'غير معروف', detail: (navigator.platform || 'منصة غير محددة') };
+    }
+
+    function detectBrowser(){
+      if (/edg\//.test(ua)) return { label: 'Microsoft Edge', detail: 'محرك Chromium' };
+      if (/opr\//.test(ua) || /opera/.test(ua)) return { label: 'Opera', detail: 'محرك Blink' };
+      if (/chrome\//.test(ua) && !/edg\//.test(ua) && !/opr\//.test(ua)) return { label: 'Google Chrome', detail: 'محرك Blink' };
+      if (/safari/.test(ua) && !/chrome/.test(ua)) return { label: 'Safari', detail: 'محرك WebKit' };
+      if (/firefox/.test(ua)) return { label: 'Firefox', detail: 'محرك Gecko' };
+      return { label: 'متصفح غير محدد', detail: (navigator.appName || '—') };
+    }
+
+    const device = classifyDevice();
+    const os = detectOS();
+    const browser = detectBrowser();
+    const screenInfo = window.screen || {};
+    const resolution = (screenInfo.width && screenInfo.height) ? `${screenInfo.width}×${screenInfo.height}` : 'غير متوفر';
+    const dpr = (window.devicePixelRatio || 1).toFixed(1).replace(/\.0$/, '');
+    const colorDepth = screenInfo.colorDepth ? `${screenInfo.colorDepth}-bit` : null;
+    const lang = (navigator.languages && navigator.languages.length ? navigator.languages[0] : navigator.language || '—').replace('_','-');
+    const tz = (Intl && Intl.DateTimeFormat && Intl.DateTimeFormat().resolvedOptions) ?
+      (Intl.DateTimeFormat().resolvedOptions().timeZone || 'منطقة زمنية مجهولة') :
+      'منطقة زمنية مجهولة';
+    const hwThreads = navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency} خيط` : 'غير مصرح';
+    const mem = navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'غير مصرح';
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const netType = connection && connection.effectiveType ? connection.effectiveType.toUpperCase() : null;
+    const netDownlink = connection && connection.downlink ? `${connection.downlink.toFixed(1)}Mbps` : null;
+    const netRtt = connection && connection.rtt ? `${connection.rtt}ms` : null;
+    const netSummary = [netType, netDownlink, netRtt].filter(Boolean).join(' • ');
+    const platform = navigator.userAgentData && navigator.userAgentData.platform ? navigator.userAgentData.platform : (navigator.platform || 'غير محدد');
+
+    if (pillEl) {
+      pillEl.textContent = `${device.icon} ${device.label}`;
+      pillEl.dataset.state = device.state;
+    }
+    if (summaryEl) {
+      summaryEl.textContent = `نعرف الآن أنك تعمل عبر ${browser.label} فوق ${os.label} من خلال ${device.label}.`;
+    }
+
+    const rows = [
+      {
+        label: 'نوع الجهاز',
+        value: `${device.icon} ${device.label}`,
+        hint: device.detail
+      },
+      {
+        label: 'النظام الأساسي',
+        value: os.label,
+        hint: `${os.detail} • ${platform}`
+      },
+      {
+        label: 'المتصفح',
+        value: browser.label,
+        hint: `${browser.detail} • لغة الواجهة ${lang.toUpperCase()}`
+      },
+      {
+        label: 'الدقة',
+        value: `${resolution} @${dpr}x`,
+        hint: colorDepth ? `عمق لون ${colorDepth}` : ''
+      },
+      {
+        label: 'الموارد',
+        value: `${hwThreads} / ${mem}`,
+        hint: netSummary ? `الشبكة: ${netSummary}` : 'حالة الاتصال القياسية'
+      }
+    ];
+
+    if (listEl) {
+      listEl.innerHTML = rows.map(item => `
+        <div class="device-intel-item">
+          <span>${item.label}</span>
+          <strong>${item.value}</strong>
+          ${item.hint ? `<div class="small muted">${item.hint}</div>` : ''}
+        </div>
+      `).join('');
+    }
+
+    if (hintEl) {
+      const netTrail = netSummary ? ` • الشبكة: ${netSummary}` : '';
+      hintEl.textContent = `المنطقة الزمنية: ${tz}${netTrail}`;
+    }
+  })();
+
   // --- Withdraw (no reload) ---
 (function attachWithdrawHandler(){
   const form = document.querySelector('form[action$="/withdraw"]');

@@ -298,6 +298,81 @@
       font-size:.9rem;
       color:#9aa3ad;
     }
+    .device-intel-card{
+      position:relative;
+      overflow:hidden;
+      border:1px solid rgba(100,195,255,.18);
+      background:linear-gradient(140deg, rgba(59,120,255,.08), rgba(0,230,173,.05)), var(--card);
+    }
+    .device-intel-card::after{
+      content:"";
+      position:absolute;
+      inset:auto -40% -40% auto;
+      width:220px;
+      height:220px;
+      background:radial-gradient(circle, rgba(111,255,195,.25), transparent 70%);
+      opacity:.6;
+      pointer-events:none;
+    }
+    .device-intel-header{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      position:relative;
+      z-index:1;
+    }
+    .device-intel-header h3{
+      margin:0 0 4px;
+    }
+    .device-intel-pill{
+      align-self:flex-start;
+      padding:.35rem .9rem;
+      border-radius:999px;
+      border:1px solid rgba(111,255,195,.3);
+      background:rgba(10,23,25,.7);
+      font-size:.85rem;
+      font-weight:600;
+      color:#9cffe1;
+      text-transform:uppercase;
+      letter-spacing:.5px;
+    }
+    .device-intel-grid{
+      margin-top:16px;
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+      gap:12px;
+      position:relative;
+      z-index:1;
+    }
+    .device-intel-item{
+      padding:12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(10,15,24,.75);
+    }
+    .device-intel-item span{
+      display:block;
+      font-size:.8rem;
+      color:var(--muted);
+      margin-bottom:6px;
+    }
+    .device-intel-item strong{
+      display:block;
+      font-size:1.1rem;
+      font-weight:700;
+      color:#eef9ff;
+      word-break:break-word;
+    }
+    .device-intel-item .small{
+      display:block;
+      margin-top:4px;
+    }
+    .device-intel-footnote{
+      margin-top:10px;
+      position:relative;
+      z-index:1;
+    }
     .withdraw-summary{
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
@@ -696,6 +771,37 @@
           <div class="small muted" style="margin-top:8px;" data-role="news-preview">
             سيظهر تقرير الذكاء الاصطناعي فور اكتمال البحث وتحليل قاعدة بيانات VulnMap.
           </div>
+        </div>
+      </div>
+
+      <div class="card device-intel-card" data-device-intel>
+        <div class="device-intel-header">
+          <div>
+            <h3>بصمة جهازك الفورية</h3>
+            <p class="small muted" data-device-intel-summary>نرسل إشارات ذكية لنفهم سلوك جهازك ونضبط تجربة VulnMap لحالة الاستخدام الحالية.</p>
+          </div>
+          <span class="device-intel-pill" data-device-intel-pill>جارٍ التحليل...</span>
+        </div>
+        <div class="device-intel-grid" data-device-intel-list>
+          <div class="device-intel-item">
+            <span>نوع الجهاز</span>
+            <strong>—</strong>
+          </div>
+          <div class="device-intel-item">
+            <span>النظام</span>
+            <strong>—</strong>
+          </div>
+          <div class="device-intel-item">
+            <span>المتصفح</span>
+            <strong>—</strong>
+          </div>
+          <div class="device-intel-item">
+            <span>الدقة واللغة</span>
+            <strong>—</strong>
+          </div>
+        </div>
+        <div class="device-intel-footnote small muted" data-device-intel-hints>
+          ننتظر المتصفح ليكشف قدراته...
         </div>
       </div>
     </section>
