@@ -116,8 +116,13 @@ def persist_remote_wallet(wallet: dict, timeout: float = 10.0) -> bool:
             }, data=payload)
             with request.urlopen(req, timeout=timeout) as resp:
                 resp.read()
+            return True
         except Exception:
-            pass
+            return False
 
-    _POOL.submit(_persist)
-    return True
+    future = _POOL.submit(_persist)
+    try:
+        return future.result(timeout=min(timeout, 5.0))
+    except TimeoutError:
+        future.cancel()
+        return False
