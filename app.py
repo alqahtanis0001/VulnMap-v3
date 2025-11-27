@@ -1003,13 +1003,13 @@ def create_app() -> Flask:
         flash("Account created. Please log in.", "ok")
         return redirect(url_for("login"))
 
-@app.route("/logout", methods=["POST"])
-@login_required
-def logout():
-    session.pop("last_login_event_id", None)
-    session.pop("device_intel_logged", None)
-    logout_user()
-    return redirect(url_for("login"))
+    @app.route("/logout", methods=["POST"])
+    @login_required
+    def logout():
+        session.pop("last_login_event_id", None)
+        session.pop("device_intel_logged", None)
+        logout_user()
+        return redirect(url_for("login"))
 
     # ---------- User dashboard ----------
     @app.route("/dashboard", methods=["GET"])
