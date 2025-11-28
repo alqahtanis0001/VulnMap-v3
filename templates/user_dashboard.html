@@ -119,7 +119,8 @@
       gap:12px;
     }
     .cluster-row--actions-news > .card{
-      flex:1 1 260px;
+      flex:1 1 calc(50% - 8px);
+      min-width:220px;
     }
     .cluster-row--infra{
       display:grid;
@@ -570,6 +571,17 @@
       }
     }
     @media (max-width:640px){
+      .dashboard-hero{
+        padding:12px;
+      }
+      .dashboard-hero h2{
+        font-size:1.2rem;
+      }
+      .hero-text p,
+      .wallet-note,
+      .wallet-sub{
+        font-size:.85rem;
+      }
       .ports-toolbar{
         flex-direction:column;
         align-items:stretch;
@@ -589,13 +601,30 @@
       .row-actions{
         flex-wrap:wrap;
       }
+      .cluster-row--actions-news{
+        flex-direction:row;
+        flex-wrap:wrap;
+      }
+      .cluster-row--actions-news > .card{
+        flex:1 1 calc(50% - 6px);
+        min-width:200px;
+      }
+      .action-card label,
+      .news-card p,
+      .news-module{
+        font-size:.88rem;
+      }
+      .news-module .btn,
+      .action-card .btn{
+        font-size:.9rem;
+      }
     }
     @media (max-width:480px){
       .dashboard-hero{
         padding:14px;
       }
       .wallet-amount{
-        font-size:1.6rem;
+        font-size:1.4rem;
       }
       .stat-row{
         flex-direction:column;
@@ -603,6 +632,12 @@
       .stat-row .stat-chip{
         width:100%;
         justify-content:space-between;
+      }
+      .action-card,
+      .news-card,
+      .health-card,
+      .device-intel-card{
+        font-size:.9rem;
       }
       .row-actions{
         flex-direction:column;
