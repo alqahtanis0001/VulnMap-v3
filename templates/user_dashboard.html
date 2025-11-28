@@ -523,25 +523,6 @@
       0%{background-position:0% 0;}
       100%{background-position:200% 0;}
     }
-    @media (min-width:961px){
-      .dashboard-clusters{
-        display:grid;
-        grid-template-columns:minmax(0, 1fr) minmax(260px, 340px);
-        gap:16px;
-        align-items:flex-start;
-      }
-      .cluster-main{
-        grid-column:1;
-      }
-      .cluster-actions,
-      .cluster-infra{
-        grid-column:2;
-      }
-      .cluster-actions{
-        position:sticky;
-        top:12px;
-      }
-    }
     @media (min-width:720px){
       .cluster-row--actions-news{
         flex-wrap:nowrap;
