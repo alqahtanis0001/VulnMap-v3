@@ -49,8 +49,8 @@
     if (bar) bar.style.width = '0%';
     if (status) status.textContent = 'تهيئة محرك الاكتشاف...';
 
-    // Duration: 12–20 seconds
-    const totalMs = 12000 + Math.floor(Math.random() * 8000);
+    // Duration: 6–10 seconds
+    const totalMs = 6000 + Math.floor(Math.random() * 4000);
     const start = performance.now();
 
     // Fire backend request right away
