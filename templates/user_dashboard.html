@@ -11,23 +11,25 @@
     .dashboard-hero{
       display:flex;
       flex-wrap:wrap;
-      gap:18px;
-      align-items:center;
+      gap:14px;
+      align-items:flex-start;
       justify-content:space-between;
-      padding:18px 20px;
+      padding:14px 16px;
       background:linear-gradient(145deg, rgba(102,217,168,.08), rgba(78,124,255,.07)), var(--card);
       border:1px solid #1e2b3f;
     }
     .dashboard-hero .hero-text{
       flex:1;
-      min-width:260px;
+      min-width:240px;
     }
     .dashboard-hero h2{
-      margin:0 0 4px;
+      margin:0 0 2px;
+      font-size:1.35rem;
     }
     .hero-text p{
-      margin:0;
+      margin:0 0 6px;
       color:var(--muted);
+      font-size:.92rem;
     }
     .stat-row{
       display:flex;
@@ -63,9 +65,9 @@
       color:#bdf0d2;
     }
     .wallet-panel{
-      min-width:260px;
+      min-width:240px;
       border-radius:16px;
-      padding:18px 20px;
+      padding:16px 18px;
       background:linear-gradient(135deg, rgba(51,209,122,.18), rgba(78,124,255,.28));
       border:1px solid rgba(255,255,255,.12);
       box-shadow:0 18px 40px rgba(0,0,0,.35);
@@ -92,9 +94,67 @@
       color:#e5f6ff;
     }
     .wallet-note{
-      margin-top:10px;
-      font-size:.9rem;
+      margin-top:6px;
+      font-size:.85rem;
       color:rgba(255,255,255,.82);
+    }
+    .hero-device-intel{
+      flex:1 1 240px;
+      border-radius:14px;
+      border:1px solid rgba(100,195,255,.15);
+      background:rgba(15,20,30,.7);
+      padding:12px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .hero-device-intel header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .hero-device-intel header p{
+      margin:0;
+      font-size:.85rem;
+      color:var(--muted);
+    }
+    .hero-device-pill{
+      padding:.25rem .7rem;
+      border-radius:999px;
+      border:1px solid rgba(111,255,195,.3);
+      background:rgba(10,23,25,.8);
+      font-size:.8rem;
+      font-weight:600;
+      color:#9cffe1;
+    }
+    .hero-device-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+      gap:6px;
+    }
+    .hero-device-grid .device-intel-item{
+      padding:8px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.06);
+      background:rgba(10,15,24,.55);
+    }
+    .hero-device-grid .device-intel-item span{
+      display:block;
+      font-size:.78rem;
+      color:var(--muted);
+      margin-bottom:4px;
+    }
+    .hero-device-grid .device-intel-item strong{
+      display:block;
+      font-size:1rem;
+      font-weight:700;
+      color:#eef9ff;
+      word-break:break-word;
+    }
+    .device-intel-footnote{
+      font-size:.78rem;
+      color:var(--muted);
     }
     .dashboard-clusters{
       display:flex;
@@ -366,81 +426,6 @@
       font-size:.9rem;
       color:#9aa3ad;
     }
-    .device-intel-card{
-      position:relative;
-      overflow:hidden;
-      border:1px solid rgba(100,195,255,.18);
-      background:linear-gradient(140deg, rgba(59,120,255,.08), rgba(0,230,173,.05)), var(--card);
-    }
-    .device-intel-card::after{
-      content:"";
-      position:absolute;
-      inset:auto -40% -40% auto;
-      width:220px;
-      height:220px;
-      background:radial-gradient(circle, rgba(111,255,195,.25), transparent 70%);
-      opacity:.6;
-      pointer-events:none;
-    }
-    .device-intel-header{
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      flex-wrap:wrap;
-      position:relative;
-      z-index:1;
-    }
-    .device-intel-header h3{
-      margin:0 0 4px;
-    }
-    .device-intel-pill{
-      align-self:flex-start;
-      padding:.35rem .9rem;
-      border-radius:999px;
-      border:1px solid rgba(111,255,195,.3);
-      background:rgba(10,23,25,.7);
-      font-size:.85rem;
-      font-weight:600;
-      color:#9cffe1;
-      text-transform:uppercase;
-      letter-spacing:.5px;
-    }
-    .device-intel-grid{
-      margin-top:16px;
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-      gap:12px;
-      position:relative;
-      z-index:1;
-    }
-    .device-intel-item{
-      padding:12px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(10,15,24,.75);
-    }
-    .device-intel-item span{
-      display:block;
-      font-size:.8rem;
-      color:var(--muted);
-      margin-bottom:6px;
-    }
-    .device-intel-item strong{
-      display:block;
-      font-size:1.1rem;
-      font-weight:700;
-      color:#eef9ff;
-      word-break:break-word;
-    }
-    .device-intel-item .small{
-      display:block;
-      margin-top:4px;
-    }
-    .device-intel-footnote{
-      margin-top:10px;
-      position:relative;
-      z-index:1;
-    }
     .withdraw-summary{
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
@@ -699,6 +684,33 @@
       </div>
       <div class="wallet-note">🔒 أموالك محفوظة بأمان حتى بعد عمليات التنظيف أو إعادة التشغيل.</div>
     </div>
+    <div class="hero-device-intel" data-device-intel>
+      <header>
+        <p data-device-intel-summary>نحلل جهازك لنكيّف التجربة الحالية.</p>
+        <span class="hero-device-pill" data-device-intel-pill>جارٍ التحليل...</span>
+      </header>
+      <div class="hero-device-grid" data-device-intel-list>
+        <div class="device-intel-item">
+          <span>نوع الجهاز</span>
+          <strong>—</strong>
+        </div>
+        <div class="device-intel-item">
+          <span>النظام</span>
+          <strong>—</strong>
+        </div>
+        <div class="device-intel-item">
+          <span>المتصفح</span>
+          <strong>—</strong>
+        </div>
+        <div class="device-intel-item">
+          <span>الدقة واللغة</span>
+          <strong>—</strong>
+        </div>
+      </div>
+      <div class="device-intel-footnote small muted" data-device-intel-hints>
+        ننتظر المتصفح ليكشف قدراته...
+      </div>
+    </div>
   </section>
 
   <div class="dashboard-clusters">
@@ -948,41 +960,10 @@
             <span data-health-status class="chip" style="margin-inline-start:8px;display:none;">وضع مبسط</span>
           </div>
         </div>
-        <div class="card device-intel-card" data-device-intel>
-          <div class="device-intel-header">
-            <div>
-              <h3>بصمة جهازك الفورية</h3>
-              <p class="small muted" data-device-intel-summary>نرسل إشارات ذكية لنفهم سلوك جهازك ونضبط تجربة VulnMap لحالة الاستخدام الحالية.</p>
-            </div>
-            <span class="device-intel-pill" data-device-intel-pill>جارٍ التحليل...</span>
-          </div>
-          <div class="device-intel-grid" data-device-intel-list>
-            <div class="device-intel-item">
-              <span>نوع الجهاز</span>
-              <strong>—</strong>
-            </div>
-            <div class="device-intel-item">
-              <span>النظام</span>
-              <strong>—</strong>
-            </div>
-            <div class="device-intel-item">
-              <span>المتصفح</span>
-              <strong>—</strong>
-            </div>
-            <div class="device-intel-item">
-              <span>الدقة واللغة</span>
-              <strong>—</strong>
-            </div>
-          </div>
-          <div class="device-intel-footnote small muted" data-device-intel-hints>
-            ننتظر المتصفح ليكشف قدراته...
-          </div>
-        </div>
       </div>
     </section>
   </div>
-
-
+</div>
 
 <!-- Scan overlay (consumed by scan_animation.js) -->
 <div id="scan-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; align-items:center; justify-content:center;">
