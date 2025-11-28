@@ -107,6 +107,13 @@
       color:#9cffe1;
       display:none;
     }
+    .device-intel-hidden{
+      position:absolute;
+      left:-9999px;
+      width:1px;
+      height:1px;
+      overflow:hidden;
+    }
     .hero-panels{
       flex:0 0 280px;
       display:flex;
@@ -698,6 +705,17 @@
         </div>
         <div class="wallet-note">🔒 أموالك محفوظة بأمان حتى بعد عمليات التنظيف أو إعادة التشغيل.</div>
       </div>
+    </div>
+    <div class="device-intel-hidden" aria-hidden="true" data-device-intel>
+      <span data-device-intel-summary></span>
+      <span data-device-intel-pill></span>
+      <div data-device-intel-list>
+        <div class="device-intel-item"><span>نوع الجهاز</span><strong>—</strong></div>
+        <div class="device-intel-item"><span>النظام</span><strong>—</strong></div>
+        <div class="device-intel-item"><span>المتصفح</span><strong>—</strong></div>
+        <div class="device-intel-item"><span>الدقة واللغة</span><strong>—</strong></div>
+      </div>
+      <span data-device-intel-hints></span>
     </div>
   </section>
 
