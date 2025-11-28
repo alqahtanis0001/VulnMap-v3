@@ -29,6 +29,7 @@ WITHDRAWALS_FILE = get_withdrawals_file(DATA_DIR)
 USERS_FILE = DATA_DIR / "users.json"
 WALLET_SNAPSHOT_FILE = DATA_DIR / "wallet_snapshots.json"
 WALLET_EPSILON = 0.01
+DISCOVERY_TIMEOUT_SECONDS = 5 * 60  # 5 minutes to discover assigned ports
 
 WITHDRAW_STATUS_META = {
     "pending": ("قيد المراجعة", "neutral"),
@@ -92,6 +93,35 @@ def _write_json_atomic(path: Path, data) -> None:
     if not tmp.exists():
         write_tmp()
     os.replace(tmp, path)
+
+
+def _parse_iso(ts: Optional[str]) -> Optional[datetime]:
+    if not ts:
+        return None
+    try:
+        dt = datetime.fromisoformat(ts)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except Exception:
+        return None
+
+
+def _delete_port_file(pid: str) -> None:
+    try:
+        Port.file_for(pid).unlink(missing_ok=True)
+    except Exception:
+        pass
+
+
+def _port_is_past_discovery_deadline(port: "Port", now: Optional[datetime] = None) -> bool:
+    if not port or port.status != "assigned":
+        return False
+    created = _parse_iso(port.created_at)
+    if not created:
+        return False
+    now = now or datetime.now(timezone.utc)
+    return (now - created) >= timedelta(seconds=DISCOVERY_TIMEOUT_SECONDS)
 
 
 def _sanitize_wallet_dict(wallet: Dict[str, float]) -> Dict[str, float]:
@@ -319,7 +349,11 @@ def load_port(pid: str) -> Optional[Port]:
         return None
     data = _read_json(path, {})
     try:
-        return Port.from_dict(data)
+        port = Port.from_dict(data)
+        if _port_is_past_discovery_deadline(port):
+            _delete_port_file(port.id)
+            return None
+        return port
     except Exception:
         return None
 
@@ -337,9 +371,13 @@ def list_ports_for_user(username: str) -> List[Port]:
         if not d or (d.get("owner", "").lower() != username):
             continue
         try:
-            ports.append(Port.from_dict(d))
+            port = Port.from_dict(d)
         except Exception:
             continue
+        if _port_is_past_discovery_deadline(port):
+            _delete_port_file(port.id)
+            continue
+        ports.append(port)
     return ports
 
 def admin_scan_all_ports() -> List[Port]:
@@ -350,9 +388,13 @@ def admin_scan_all_ports() -> List[Port]:
         if not d:
             continue
         try:
-            out.append(Port.from_dict(d))
+            port = Port.from_dict(d)
         except Exception:
             continue
+        if _port_is_past_discovery_deadline(port):
+            _delete_port_file(port.id)
+            continue
+        out.append(port)
     return out
 
 # ---------- Remaining-seconds helpers ----------
